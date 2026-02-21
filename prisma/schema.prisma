@@ -1,0 +1,507 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LoanFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum LoanStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  DEFAULTED
+  CANCELLED
+}
+
+enum ScheduleStatus {
+  PENDING
+  PARTIAL
+  PAID
+  MISSED
+}
+
+enum PaymentStatus {
+  POSTED
+  VOID
+}
+
+enum PenaltyType {
+  LATE_FEE
+  MANUAL_FEE
+}
+
+enum PenaltyStatus {
+  ASSESSED
+  PAID
+  WAIVED
+}
+
+enum RestructureReason {
+  CUSTOMER_REQUEST
+  HARDHIP
+  COLLECTION
+  OTHER
+}
+
+enum RiskScope {
+  LOAN
+  BORROWER
+}
+
+enum TrendStatus {
+  IMPROVING
+  STABLE
+  WORSENING
+}
+
+enum RenewalConclusion {
+  NO_RENOVAR
+  REDUCIR
+  MANTENER
+  AUMENTAR
+}
+
+/**
+ * =========================
+ * Multi-tenant core
+ * =========================
+ */
+model Organization {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String    @unique
+  timezone  String    @default("America/Mexico_City")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  users         User[]
+  borrowers     Borrower[]
+  loans         Loan[]
+  settings      OrganizationSettings?
+  riskSnapshots RiskSnapshot[]
+  contractDocs  ContractDocument[]
+
+  // Inversas
+  scheduleItems PaymentSchedule[]
+  payments      Payment[]
+  penalties     Penalty[]
+  restructures  LoanRestructure[]
+
+  @@index([deletedAt])
+}
+
+model User {
+  id             String   @id @default(uuid()) @db.Uuid
+
+  // ✅ IMPORTANTE: debe ser nullable para que NextAuth (Google) pueda crear el User primero
+  organizationId String?  @db.Uuid
+
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("MEMBER") // OWNER | ADMIN | MEMBER
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // ✅ relación ahora nullable
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  // NextAuth
+  accounts Account[]
+  sessions Session[]
+
+  // inversa para LoanRestructure.createdBy
+  restructuresCreated LoanRestructure[] @relation("RestructuresCreatedByUser")
+
+  @@index([organizationId])
+  @@index([deletedAt])
+}
+
+/**
+ * =========================
+ * NextAuth tables
+ * =========================
+ */
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+/**
+ * =========================
+ * Settings per Organization
+ * =========================
+ */
+model OrganizationSettings {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @unique @db.Uuid
+
+  // Defaults for new loans
+  defaultInterestRatePct Decimal       @default(10.00) @db.Decimal(5, 2)
+  defaultFrequency       LoanFrequency @default(WEEKLY)
+  defaultTermCount       Int           @default(10)
+
+  // Late handling
+  graceLateDays  Int @default(0)
+  severeLateDays Int @default(14)
+
+  // Trend
+  trendWindowN   Int @default(6)
+  trendDeltaDays Int @default(2)
+
+  // Renewal thresholds
+  noRenewLatePct         Int @default(35)
+  reduceLatePct          Int @default(20)
+  increaseLatePctMax     Int @default(10)
+  minOnTimePctToIncrease Int @default(90)
+
+  // Suggested limit multipliers
+  reduceMultiplier   Decimal @default(0.80) @db.Decimal(6, 3)
+  maintainMultiplier Decimal @default(1.00) @db.Decimal(6, 3)
+  increaseMultiplier Decimal @default(1.20) @db.Decimal(6, 3)
+
+  // Penalty defaults
+  lateFeeFlatAmount        Decimal @default(0.00) @db.Decimal(12, 2)
+  lateFeePerDayAmount      Decimal @default(0.00) @db.Decimal(12, 2)
+  maxPenaltyPerInstallment Decimal @default(0.00) @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+/**
+ * =========================
+ * Borrowers / Loans
+ * =========================
+ */
+model Borrower {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+
+  fullName    String
+  phone       String?
+  email       String?
+  externalRef String?
+  notes       String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  loans         Loan[]
+  payments      Payment[]
+  riskSnapshots RiskSnapshot[]
+  contractDocs  ContractDocument[]
+
+  @@unique([organizationId, phone])
+  @@unique([organizationId, externalRef])
+  @@index([organizationId])
+  @@index([organizationId, fullName])
+  @@index([deletedAt])
+}
+
+model Loan {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  borrowerId     String @db.Uuid
+
+  status    LoanStatus    @default(DRAFT)
+  startDate DateTime
+  frequency LoanFrequency
+  termCount Int
+
+  principalAmount     Decimal @db.Decimal(12, 2)
+  interestRatePct     Decimal @db.Decimal(5, 2)
+  expectedInstallment Decimal @db.Decimal(12, 2)
+  totalExpected       Decimal @db.Decimal(12, 2)
+
+  endDate     DateTime?
+  nextDueDate DateTime?
+
+  lateFeeFlatAmount        Decimal? @db.Decimal(12, 2)
+  lateFeePerDayAmount      Decimal? @db.Decimal(12, 2)
+  maxPenaltyPerInstallment Decimal? @db.Decimal(12, 2)
+
+  notes String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  borrower     Borrower     @relation(fields: [borrowerId], references: [id], onDelete: Restrict)
+
+  scheduleItems PaymentSchedule[]
+  payments      Payment[]
+  penalties     Penalty[]
+  restructures  LoanRestructure[]
+  riskSnapshots RiskSnapshot[]
+  contractDocs  ContractDocument[]
+
+  @@index([organizationId])
+  @@index([organizationId, borrowerId])
+  @@index([organizationId, status])
+  @@index([organizationId, nextDueDate])
+  @@index([deletedAt])
+}
+
+/**
+ * =========================
+ * Payment schedule / Payments
+ * =========================
+ */
+model PaymentSchedule {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  loanId         String @db.Uuid
+
+  installmentNumber Int
+  dueDate           DateTime
+  expectedAmount    Decimal  @db.Decimal(12, 2)
+
+  status     ScheduleStatus @default(PENDING)
+  paidAmount Decimal        @default(0.00) @db.Decimal(12, 2)
+  paidAt     DateTime?
+  lateDays   Int?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  loan         Loan         @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  payments  Payment[]
+  penalties Penalty[]
+
+  @@unique([loanId, installmentNumber])
+  @@index([loanId, dueDate])
+  @@index([organizationId, dueDate])
+  @@index([organizationId, status])
+  @@index([deletedAt])
+}
+
+model Payment {
+  id             String  @id @default(uuid()) @db.Uuid
+  organizationId String  @db.Uuid
+  borrowerId     String  @db.Uuid
+  loanId         String  @db.Uuid
+  scheduleId     String? @db.Uuid
+
+  paidAt DateTime
+  amount Decimal       @db.Decimal(12, 2)
+  status PaymentStatus @default(POSTED)
+  notes  String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  borrower     Borrower         @relation(fields: [borrowerId], references: [id], onDelete: Restrict)
+  loan         Loan             @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  schedule     PaymentSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, paidAt])
+  @@index([loanId, paidAt])
+  @@index([borrowerId, paidAt])
+  @@index([scheduleId])
+  @@index([deletedAt])
+}
+
+/**
+ * =========================
+ * Fees / Penalties
+ * =========================
+ */
+model Penalty {
+  id             String  @id @default(uuid()) @db.Uuid
+  organizationId String  @db.Uuid
+  loanId         String  @db.Uuid
+  scheduleId     String? @db.Uuid
+
+  type       PenaltyType   @default(LATE_FEE)
+  status     PenaltyStatus @default(ASSESSED)
+  amount     Decimal       @db.Decimal(12, 2)
+  assessedAt DateTime      @default(now())
+  paidAt     DateTime?
+  notes      String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  loan         Loan             @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  schedule     PaymentSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, assessedAt])
+  @@index([loanId])
+  @@index([scheduleId])
+  @@index([deletedAt])
+}
+
+/**
+ * =========================
+ * Restructures
+ * =========================
+ */
+model LoanRestructure {
+  id              String  @id @default(uuid()) @db.Uuid
+  organizationId  String  @db.Uuid
+  loanId          String  @db.Uuid
+  createdByUserId String? @db.Uuid
+
+  reason RestructureReason @default(OTHER)
+  notes  String?
+
+  effectiveFromInstallment Int
+
+  oldFrequency LoanFrequency
+  newFrequency LoanFrequency
+  oldTermCount Int
+  newTermCount Int
+
+  oldExpectedInstallment Decimal @db.Decimal(12, 2)
+  newExpectedInstallment Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  loan         Loan         @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  createdBy User? @relation("RestructuresCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([loanId])
+  @@index([deletedAt])
+}
+
+/**
+ * =========================
+ * Risk snapshots
+ * =========================
+ */
+model RiskSnapshot {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  scope          RiskScope
+
+  loanId     String? @db.Uuid
+  borrowerId String? @db.Uuid
+
+  asOfDate DateTime @default(now())
+  windowN  Int      @default(6)
+
+  pagosTotales       Int @default(0)
+  pagosATiempo       Int @default(0)
+  pagosTarde         Int @default(0)
+  pagosTardePct      Int @default(0)
+  atrasosCount       Int @default(0)
+  atrasoPromedioDias Int @default(0)
+
+  trend          TrendStatus       @default(STABLE)
+  conclusion     RenewalConclusion @default(MANTENER)
+  suggestedLimit Decimal           @default(0.00) @db.Decimal(12, 2)
+
+  severeLateCountLastN Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  loan         Loan?        @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  borrower     Borrower?    @relation(fields: [borrowerId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, scope, loanId, borrowerId, asOfDate])
+  @@index([organizationId, scope, asOfDate])
+  @@index([loanId])
+  @@index([borrowerId])
+}
+
+/**
+ * =========================
+ * Contract documents (PDF)
+ * =========================
+ */
+model ContractDocument {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  loanId         String @db.Uuid
+  borrowerId     String @db.Uuid
+
+  storageKey String
+  url        String?
+  fileName   String
+  mimeType   String  @default("application/pdf")
+  sizeBytes  Int?
+  sha256     String?
+
+  generatedAt DateTime?
+  uploadedAt  DateTime  @default(now())
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  loan         Loan         @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  borrower     Borrower     @relation(fields: [borrowerId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, uploadedAt])
+  @@index([loanId])
+  @@index([borrowerId])
+  @@index([deletedAt])
+}
