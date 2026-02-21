@@ -2,7 +2,6 @@
 import { prisma } from "@/lib/prisma";
 import { TrendStatus, RenewalConclusion } from "@prisma/client";
 
-// ✅ Tipos derivados desde enums runtime (esto evita el bug de TS "no overlap")
 type Trend = (typeof TrendStatus)[keyof typeof TrendStatus];
 type Conclusion = (typeof RenewalConclusion)[keyof typeof RenewalConclusion];
 
@@ -21,7 +20,6 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
   });
 
   const s = settings ?? {
-    graceLateDays: 0,
     severeLateDays: 14,
     trendWindowN: 6,
     trendDeltaDays: 2,
@@ -61,7 +59,6 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
   const tardios = paidItems
     .filter((x) => (x.lateDays ?? 0) > 0)
     .map((x) => x.lateDays ?? 0);
-
   const atrasoPromedioDias = tardios.length ? roundInt(avg(tardios)) : 0;
 
   const N = s.trendWindowN ?? 6;
@@ -73,7 +70,7 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
   const avgPrev = prev.length ? avg(prev.map((x) => x.lateDays ?? 0)) : 0;
   const delta = avgRecent - avgPrev;
 
-  // ✅ trend bien tipado (ya no queda como unión parcial)
+  // ✅ trend con tipo derivado del enum runtime
   let trend: Trend = TrendStatus.STABLE;
   const deltaTh = s.trendDeltaDays ?? 2;
   if (delta <= -deltaTh) trend = TrendStatus.IMPROVING;
@@ -97,10 +94,7 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
     (trend === TrendStatus.WORSENING && pagosTardePct >= reduceLatePct)
   ) {
     conclusion = RenewalConclusion.NO_RENOVAR;
-  } else if (
-    pagosTardePct >= reduceLatePct ||
-    trend === TrendStatus.WORSENING
-  ) {
+  } else if (pagosTardePct >= reduceLatePct || trend === TrendStatus.WORSENING) {
     conclusion = RenewalConclusion.REDUCIR;
   } else {
     const onTimePct = 100 - pagosTardePct;
@@ -142,7 +136,7 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
       pagosTardePct,
       atrasosCount: pagosTarde,
       atrasoPromedioDias,
-      trend: trend as any, // Prisma espera enum; este cast solo es para TS
+      trend: trend as any,
       conclusion: conclusion as any,
       suggestedLimit,
       severeLateCountLastN,
@@ -179,16 +173,13 @@ export async function recalcBorrowerSnapshot(orgId: string, borrowerId: string) 
     avg(latestLoanSnaps.map((x) => x.atrasoPromedioDias))
   );
 
-  // ✅ Trend por mayoría (tipado estable)
   const trendCounts: Record<Trend, number> = {
     [TrendStatus.IMPROVING]: 0,
     [TrendStatus.STABLE]: 0,
     [TrendStatus.WORSENING]: 0,
   };
 
-  for (const x of latestLoanSnaps) {
-    trendCounts[x.trend as Trend] += 1;
-  }
+  for (const x of latestLoanSnaps) trendCounts[x.trend as Trend] += 1;
 
   let trend: Trend = TrendStatus.STABLE;
   if (
@@ -200,7 +191,6 @@ export async function recalcBorrowerSnapshot(orgId: string, borrowerId: string) 
     trend = TrendStatus.IMPROVING;
   }
 
-  // ✅ Worst conclusion (peor gana)
   const order: Record<Conclusion, number> = {
     [RenewalConclusion.AUMENTAR]: 0,
     [RenewalConclusion.MANTENER]: 1,
