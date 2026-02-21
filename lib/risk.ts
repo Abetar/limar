@@ -59,6 +59,7 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
   const tardios = paidItems
     .filter((x) => (x.lateDays ?? 0) > 0)
     .map((x) => x.lateDays ?? 0);
+
   const atrasoPromedioDias = tardios.length ? roundInt(avg(tardios)) : 0;
 
   const N = s.trendWindowN ?? 6;
@@ -70,7 +71,7 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
   const avgPrev = prev.length ? avg(prev.map((x) => x.lateDays ?? 0)) : 0;
   const delta = avgRecent - avgPrev;
 
-  // ✅ trend con tipo derivado del enum runtime
+  // trend (calculado)
   let trend: Trend = TrendStatus.STABLE;
   const deltaTh = s.trendDeltaDays ?? 2;
   if (delta <= -deltaTh) trend = TrendStatus.IMPROVING;
@@ -81,6 +82,7 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
     (x) => (x.lateDays ?? 0) >= severeLateDays
   ).length;
 
+  // Conclusión determinística
   const noRenewLatePct = s.noRenewLatePct ?? 35;
   const reduceLatePct = s.reduceLatePct ?? 20;
   const increaseLatePctMax = s.increaseLatePctMax ?? 10;
@@ -88,20 +90,22 @@ export async function recalcLoanSnapshot(orgId: string, loanId: string) {
 
   let conclusion: Conclusion = RenewalConclusion.MANTENER;
 
+  const isWorsening = String(trend) === "WORSENING";
+
   if (
     pagosTardePct >= noRenewLatePct ||
     severeLateCountLastN >= 2 ||
-    (trend === TrendStatus.WORSENING && pagosTardePct >= reduceLatePct)
+    (isWorsening && pagosTardePct >= reduceLatePct)
   ) {
     conclusion = RenewalConclusion.NO_RENOVAR;
-  } else if (pagosTardePct >= reduceLatePct || trend === TrendStatus.WORSENING) {
+  } else if (pagosTardePct >= reduceLatePct || isWorsening) {
     conclusion = RenewalConclusion.REDUCIR;
   } else {
     const onTimePct = 100 - pagosTardePct;
     if (
       pagosTardePct <= increaseLatePctMax &&
       onTimePct >= minOnTimePctToIncrease &&
-      trend !== TrendStatus.WORSENING
+      !isWorsening
     ) {
       conclusion = RenewalConclusion.AUMENTAR;
     } else {
@@ -204,7 +208,9 @@ export async function recalcBorrowerSnapshot(orgId: string, borrowerId: string) 
     if (order[c] > order[worst]) worst = c;
   }
 
-  const suggestedLimit = avg(latestLoanSnaps.map((x) => Number(x.suggestedLimit)));
+  const suggestedLimit = avg(
+    latestLoanSnaps.map((x) => Number(x.suggestedLimit))
+  );
 
   await prisma.riskSnapshot.create({
     data: {
@@ -221,7 +227,9 @@ export async function recalcBorrowerSnapshot(orgId: string, borrowerId: string) 
       trend: trend as any,
       conclusion: worst as any,
       suggestedLimit,
-      severeLateCountLastN: Math.max(...latestLoanSnaps.map((x) => x.severeLateCountLastN)),
+      severeLateCountLastN: Math.max(
+        ...latestLoanSnaps.map((x) => x.severeLateCountLastN)
+      ),
     },
   });
 }
