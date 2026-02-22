@@ -9,7 +9,7 @@ export default function LoginForm() {
       <button
         onClick={() =>
           signIn("google", {
-            callbackUrl: "http://localhost:3000/dashboard",
+            callbackUrl: "/dashboard",
           })
         }
         className="w-full rounded-xl bg-[#0F2A36] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0B1F28]"
