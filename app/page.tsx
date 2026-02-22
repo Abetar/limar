@@ -1,146 +1,30 @@
 // app/page.tsx
 import Link from "next/link";
 
-const COLORS = {
-  primary: "#0F2A36",
-  secondary: "#D6CBBF",
-  base: "#F5F6F7",
-  text: "#1F1F1F",
-  positive: "#2E7D5B",
-  risk: "#B23A3A",
-  warning: "#C88A1A",
-  primaryHover: "#0B1F28",
-};
-
-function Container({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto w-full max-w-6xl px-4">{children}</div>;
-}
-
-function Badge({
-  children,
-  tone = "neutral",
-}: {
-  children: React.ReactNode;
-  tone?: "neutral" | "positive" | "warning" | "risk";
-}) {
-  const toneMap: Record<string, string> = {
-    neutral: `border-[${COLORS.secondary}] bg-white text-[${COLORS.text}]`,
-    positive: `border-[${COLORS.positive}] bg-white text-[${COLORS.positive}]`,
-    warning: `border-[${COLORS.warning}] bg-white text-[${COLORS.warning}]`,
-    risk: `border-[${COLORS.risk}] bg-white text-[${COLORS.risk}]`,
+export default function Page() {
+  const COLORS = {
+    primary: "#0F2A36", // azul petróleo
+    secondary: "#D6CBBF", // arena técnico
+    base: "#F5F6F7", // gris muy claro
+    text: "#1F1F1F", // gris carbón
+    positive: "#2E7D5B", // verde sobrio
+    risk: "#B23A3A", // rojo controlado
+    warning: "#C88A1A", // ámbar técnico
+    primaryHover: "#0B1F28",
   };
 
-  const dot =
-    tone === "neutral"
-      ? COLORS.primary
-      : tone === "positive"
-      ? COLORS.positive
-      : tone === "warning"
-      ? COLORS.warning
-      : COLORS.risk;
+  const container = "mx-auto w-full max-w-6xl px-4";
 
-  return (
-    <span
-      className={[
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium",
-        toneMap[tone],
-      ].join(" ")}
-    >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ background: dot }} />
-      {children}
-    </span>
-  );
-}
-
-function Card({
-  title,
-  desc,
-  meta,
-}: {
-  title: string;
-  desc: string;
-  meta?: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <h3 className="text-base font-semibold" style={{ color: COLORS.text }}>
-          {title}
-        </h3>
-        {meta ? <div className="shrink-0">{meta}</div> : null}
-      </div>
-      <p className="mt-2 text-sm leading-6 text-black/70">{desc}</p>
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
-      <p className="text-xs font-medium text-black/60">{label}</p>
-      <p className="mt-2 text-2xl font-semibold" style={{ color: COLORS.text }}>
-        {value}
-      </p>
-      <p className="mt-1 text-xs text-black/60">{hint}</p>
-    </div>
-  );
-}
-
-function PrimaryButton({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white transition-colors"
-      style={{ background: COLORS.primary }}
-    >
-      {children}
-    </Link>
-  );
-}
-
-function SecondaryButton({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center rounded-xl border bg-white px-5 py-3 text-sm font-semibold transition-colors"
-      style={{ borderColor: COLORS.primary, color: COLORS.primary }}
-    >
-      {children}
-    </Link>
-  );
-}
-
-export default function Page() {
   return (
     <div className="min-h-dvh" style={{ background: COLORS.base, color: COLORS.text }}>
-      {/* Top nav */}
+      {/* NAV */}
       <header
-        className="sticky top-0 z-30 border-b"
-        style={{ background: "white", borderColor: "rgba(0,0,0,0.08)" }}
+        className="sticky top-0 z-40 border-b bg-white"
+        style={{ borderColor: "rgba(0,0,0,0.08)" }}
       >
-        <Container>
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className={container}>
+          <div className="flex h-16 items-center justify-between gap-4">
+            <Link href="/" className="flex items-center gap-3">
               <div
                 className="grid h-9 w-9 place-items-center rounded-xl text-white"
                 style={{ background: COLORS.primary }}
@@ -154,370 +38,631 @@ export default function Page() {
                 </p>
                 <p className="text-xs text-black/60">Orden, control y criterio</p>
               </div>
-            </div>
+            </Link>
 
             <nav className="hidden items-center gap-6 md:flex">
-              <a className="text-sm text-black/70 hover:text-black" href="#beneficios">
-                Beneficios
-              </a>
-              <a className="text-sm text-black/70 hover:text-black" href="#funciones">
-                Funciones
-              </a>
               <a className="text-sm text-black/70 hover:text-black" href="#como-funciona">
                 Cómo funciona
               </a>
-              <a className="text-sm text-black/70 hover:text-black" href="#planes">
-                Planes
+              <a className="text-sm text-black/70 hover:text-black" href="#criterio">
+                Criterio de renovación
+              </a>
+              <a className="text-sm text-black/70 hover:text-black" href="#beneficios">
+                Beneficios
+              </a>
+              <a className="text-sm text-black/70 hover:text-black" href="#faq">
+                FAQ
               </a>
             </nav>
 
             <div className="flex items-center gap-3">
-              <SecondaryButton href="/login">Iniciar sesión</SecondaryButton>
-              <PrimaryButton href="/register">Crear cuenta</PrimaryButton>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center rounded-xl border bg-white px-4 py-2.5 text-sm font-semibold"
+                style={{ borderColor: COLORS.primary, color: COLORS.primary }}
+              >
+                Iniciar sesión
+              </Link>
+
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors"
+                style={{ background: COLORS.primary }}
+              >
+                Crear cuenta
+              </Link>
             </div>
           </div>
-        </Container>
+        </div>
       </header>
 
       <main>
-        {/* Hero */}
+        {/* HERO */}
         <section className="pt-10 md:pt-14">
-          <Container>
-            <div className="grid items-start gap-10 md:grid-cols-2">
+          <div className={container}>
+            <div className="grid gap-10 md:grid-cols-2 md:items-start">
               <div>
-                <Badge>Para microprestamistas que operan en serio</Badge>
+                <div
+                  className="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium"
+                  style={{ borderColor: COLORS.secondary }}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.primary }} />
+                  Diseñado para microprestamistas en México
+                </div>
 
                 <h1 className="mt-4 text-3xl font-semibold leading-tight md:text-4xl" style={{ color: COLORS.text }}>
-                  Menos intuición. <br />
-                  Más claridad. <br />
+                  Menos intuición.
+                  <br />
+                  Más claridad.
+                  <br />
                   Más control sobre tu capital.
                 </h1>
 
                 <p className="mt-4 max-w-xl text-base leading-7 text-black/70">
-                  <span className="font-medium" style={{ color: COLORS.text }}>
+                  <span className="font-semibold" style={{ color: COLORS.text }}>
                     Limar
                   </span>{" "}
                   es un sistema profesional para llevar tu cartera con{" "}
-                  <span className="font-medium" style={{ color: COLORS.text }}>
+                  <span className="font-semibold" style={{ color: COLORS.text }}>
                     orden, control y criterio
                   </span>
                   . Gestiona préstamos, calcula{" "}
-                  <span className="font-medium" style={{ color: COLORS.text }}>
+                  <span className="font-semibold" style={{ color: COLORS.text }}>
                     intereses y multas automáticamente
                   </span>
                   , detecta{" "}
-                  <span className="font-medium" style={{ color: COLORS.text }}>
+                  <span className="font-semibold" style={{ color: COLORS.text }}>
                     riesgos progresivos
                   </span>{" "}
                   y te ayuda a decidir cuándo{" "}
-                  <span className="font-medium" style={{ color: COLORS.text }}>
+                  <span className="font-semibold" style={{ color: COLORS.text }}>
                     renovar, reducir o detener
                   </span>{" "}
                   un crédito.
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <PrimaryButton href="/register">Empezar ahora</PrimaryButton>
-                  <SecondaryButton href="#demo">Ver demo</SecondaryButton>
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0B1F28]"
+                    style={{ background: COLORS.primary }}
+                  >
+                    Probar con mi cartera
+                  </Link>
+
+                  <a
+                    href="#demo"
+                    className="inline-flex items-center justify-center rounded-xl border bg-white px-5 py-3 text-sm font-semibold"
+                    style={{ borderColor: COLORS.primary, color: COLORS.primary }}
+                  >
+                    Ver ejemplo realista
+                  </a>
                 </div>
 
-                <div className="mt-6 flex flex-wrap gap-3 text-xs text-black/60">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.positive }} />
-                    Pagos y cumplimiento claros
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.warning }} />
-                    Alertas por vencimiento y riesgo
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.risk }} />
-                    Señales reales para cortar pérdidas
-                  </span>
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  <div
+                    className="rounded-2xl border bg-white p-4 shadow-sm"
+                    style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                  >
+                    <p className="text-xs font-medium text-black/60">Automático</p>
+                    <p className="mt-2 text-sm font-semibold" style={{ color: COLORS.text }}>
+                      Intereses y multas
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-black/60">Consistente, sin errores manuales.</p>
+                  </div>
+
+                  <div
+                    className="rounded-2xl border bg-white p-4 shadow-sm"
+                    style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                  >
+                    <p className="text-xs font-medium text-black/60">Progresivo</p>
+                    <p className="mt-2 text-sm font-semibold" style={{ color: COLORS.text }}>
+                      Riesgo por conducta
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-black/60">No por una sola falta.</p>
+                  </div>
+
+                  <div
+                    className="rounded-2xl border bg-white p-4 shadow-sm"
+                    style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                  >
+                    <p className="text-xs font-medium text-black/60">Determinístico</p>
+                    <p className="mt-2 text-sm font-semibold" style={{ color: COLORS.text }}>
+                      Conclusión de renovación
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-black/60">Reglas claras, explicables.</p>
+                  </div>
                 </div>
+
+                <p className="mt-6 text-xs text-black/50">
+                  Sin gradientes. Sin neón. Sin “fintech flashy”. Solo operación clara.
+                </p>
               </div>
 
-              {/* Preview panel */}
-              <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm" id="demo">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold" style={{ color: COLORS.text }}>
-                    Tablero (ejemplo)
-                  </p>
-                  <span className="rounded-lg px-2 py-1 text-xs font-medium" style={{ background: COLORS.secondary, color: COLORS.primary }}>
+              {/* DEMO / PREVIEW */}
+              <div
+                id="demo"
+                className="rounded-2xl border bg-white p-6 shadow-sm"
+                style={{ borderColor: "rgba(0,0,0,0.08)" }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: COLORS.text }}>
+                      Vista de cartera (ejemplo)
+                    </p>
+                    <p className="mt-1 text-xs text-black/60">
+                      Lo importante: quién está bien, quién se está desviando y quién ya es riesgo real.
+                    </p>
+                  </div>
+                  <span
+                    className="rounded-lg px-2 py-1 text-xs font-medium"
+                    style={{ background: COLORS.secondary, color: COLORS.primary }}
+                  >
                     Hoy
                   </span>
                 </div>
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                  <Stat label="Capital vigente" value="$128,450" hint="Al corriente" />
-                  <Stat label="Por vencer" value="$23,900" hint="Próx. 7 días" />
-                  <Stat label="En atraso" value="$9,120" hint="Acción requerida" />
+                  <div className="rounded-2xl border p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <p className="text-xs font-medium text-black/60">Capital vigente</p>
+                    <p className="mt-2 text-2xl font-semibold" style={{ color: COLORS.text }}>
+                      $128,450
+                    </p>
+                    <p className="mt-1 text-xs text-black/60">Al corriente</p>
+                  </div>
+
+                  <div className="rounded-2xl border p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <p className="text-xs font-medium text-black/60">Por vencer</p>
+                    <p className="mt-2 text-2xl font-semibold" style={{ color: COLORS.text }}>
+                      $23,900
+                    </p>
+                    <p className="mt-1 text-xs" style={{ color: COLORS.warning }}>
+                      Próx. 7 días
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <p className="text-xs font-medium text-black/60">En atraso</p>
+                    <p className="mt-2 text-2xl font-semibold" style={{ color: COLORS.text }}>
+                      $9,120
+                    </p>
+                    <p className="mt-1 text-xs" style={{ color: COLORS.risk }}>
+                      Acción requerida
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-black/10 p-4">
+                <div className="mt-6 rounded-2xl border p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold">Riesgo progresivo</p>
-                    <span className="text-xs text-black/60">se actualiza por comportamiento</span>
+                    <p className="text-sm font-semibold" style={{ color: COLORS.text }}>
+                      Señales de riesgo (progresivo)
+                    </p>
+                    <p className="text-xs text-black/60">sube/baja por comportamiento</p>
                   </div>
 
-                  <div className="mt-3 space-y-3 text-sm">
-                    <div className="flex items-start justify-between gap-3">
+                  <div className="mt-3 space-y-3">
+                    <div
+                      className="flex items-start justify-between gap-4 rounded-xl border bg-white p-3"
+                      style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                    >
                       <div>
-                        <p className="font-medium">Cliente #204</p>
-                        <p className="text-xs text-black/60">Pagó a tiempo. Perfil estable.</p>
+                        <p className="text-sm font-semibold">Cliente #204</p>
+                        <p className="text-xs text-black/60">
+                          Pagos puntuales · Sin “promesas” · Historial estable
+                        </p>
                       </div>
-                      <Badge tone="positive">Cumplimiento</Badge>
+                      <span
+                        className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium"
+                        style={{ borderColor: COLORS.positive, color: COLORS.positive }}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.positive }} />
+                        Cumple
+                      </span>
                     </div>
 
-                    <div className="flex items-start justify-between gap-3">
+                    <div
+                      className="flex items-start justify-between gap-4 rounded-xl border bg-white p-3"
+                      style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                    >
                       <div>
-                        <p className="font-medium">Cliente #118</p>
-                        <p className="text-xs text-black/60">Vence pronto. Seguimiento preventivo.</p>
+                        <p className="text-sm font-semibold">Cliente #118</p>
+                        <p className="text-xs text-black/60">Vence pronto · Pagos mixtos · Requiere seguimiento</p>
                       </div>
-                      <Badge tone="warning">Atención</Badge>
+                      <span
+                        className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium"
+                        style={{ borderColor: COLORS.warning, color: COLORS.warning }}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.warning }} />
+                        Atención
+                      </span>
                     </div>
 
-                    <div className="flex items-start justify-between gap-3">
+                    <div
+                      className="flex items-start justify-between gap-4 rounded-xl border bg-white p-3"
+                      style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                    >
                       <div>
-                        <p className="font-medium">Cliente #055</p>
-                        <p className="text-xs text-black/60">Atraso recurrente. Riesgo alto.</p>
+                        <p className="text-sm font-semibold">Cliente #055</p>
+                        <p className="text-xs text-black/60">Atraso recurrente · Promesa sin pago · Riesgo alto</p>
                       </div>
-                      <Badge tone="risk">Riesgo</Badge>
+                      <span
+                        className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium"
+                        style={{ borderColor: COLORS.risk, color: COLORS.risk }}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.risk }} />
+                        Riesgo
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-black/10 p-4">
-                  <p className="text-sm font-semibold">Conclusión sugerida (ejemplo)</p>
+                <div className="mt-6 rounded-2xl border p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                  <p className="text-sm font-semibold" style={{ color: COLORS.text }}>
+                    Conclusión sugerida (explicable)
+                  </p>
+
                   <div className="mt-3 grid gap-2">
-                    <div className="flex items-center justify-between rounded-xl border border-black/10 bg-white px-4 py-3">
+                    <div
+                      className="flex items-center justify-between rounded-xl border bg-white px-4 py-3"
+                      style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                    >
                       <span className="text-sm font-medium">Cliente #204</span>
                       <span className="text-sm font-semibold" style={{ color: COLORS.positive }}>
                         Aumentar
                       </span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl border border-black/10 bg-white px-4 py-3">
+                    <div
+                      className="flex items-center justify-between rounded-xl border bg-white px-4 py-3"
+                      style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                    >
                       <span className="text-sm font-medium">Cliente #118</span>
                       <span className="text-sm font-semibold" style={{ color: COLORS.warning }}>
                         Mantener
                       </span>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl border border-black/10 bg-white px-4 py-3">
+                    <div
+                      className="flex items-center justify-between rounded-xl border bg-white px-4 py-3"
+                      style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                    >
                       <span className="text-sm font-medium">Cliente #055</span>
                       <span className="text-sm font-semibold" style={{ color: COLORS.risk }}>
                         No renovar
                       </span>
                     </div>
                   </div>
-                </div>
 
-                <p className="mt-4 text-xs text-black/50">
-                  * Vista de ejemplo para ilustrar criterios (no datos reales).
-                </p>
-              </div>
-            </div>
-          </Container>
-        </section>
-
-        {/* Benefits */}
-        <section id="beneficios" className="mt-14 md:mt-20">
-          <Container>
-            <h2 className="text-2xl font-semibold" style={{ color: COLORS.text }}>
-              Orden, control y criterio — aterrizado a tu operación
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/70">
-              Lo que importa: saber quién está bien, quién se está desviando y quién ya representa un riesgo.
-              Todo con reglas claras, sin improvisación.
-            </p>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <Card
-                title="Menos intuición"
-                desc="Decisiones basadas en historial de pagos, puntualidad y comportamiento. Sin “corazonadas”."
-                meta={<Badge>Decisión</Badge>}
-              />
-              <Card
-                title="Más claridad"
-                desc="Estados sobrios: al corriente, por vencer, atraso y riesgo. Prioriza cobranza con foco."
-                meta={<Badge tone="warning">Prioridad</Badge>}
-              />
-              <Card
-                title="Más control del capital"
-                desc="Evita renovaciones mal hechas. Reduce exposición antes de que el atraso se convierta en pérdida."
-                meta={<Badge tone="risk">Protección</Badge>}
-              />
-            </div>
-          </Container>
-        </section>
-
-        {/* Features */}
-        <section id="funciones" className="mt-14 md:mt-20">
-          <Container>
-            <div className="rounded-2xl border border-black/10 bg-white p-8 shadow-sm">
-              <h2 className="text-2xl font-semibold" style={{ color: COLORS.text }}>
-                Funciones clave
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-black/70">
-                Lo esencial para llevar cartera profesional sin complicar tu día.
-              </p>
-
-              <div className="mt-6 grid gap-4 md:grid-cols-3">
-                <Card
-                  title="Gestión de préstamos"
-                  desc="Registro claro de monto, plazo, frecuencia, fechas clave y condiciones. Todo entendible."
-                />
-                <Card
-                  title="Intereses y multas automáticas"
-                  desc="Cálculo consistente para evitar errores manuales y discusiones innecesarias."
-                />
-                <Card
-                  title="Riesgo progresivo"
-                  desc="Señales que suben o bajan según comportamiento real, no por una sola falta."
-                />
-                <Card
-                  title="Vencimientos y atrasos"
-                  desc="Detección y prioridades para que cobres a tiempo y con orden."
-                />
-                <Card
-                  title="Conclusión de renovación"
-                  desc="Recomendación clara: renovar, reducir, mantener o detener, basada en reglas."
-                />
-                <Card
-                  title="Historial y trazabilidad"
-                  desc="Mejor control de lo que pasó y por qué tomaste una decisión."
-                />
-              </div>
-            </div>
-          </Container>
-        </section>
-
-        {/* How it works */}
-        <section id="como-funciona" className="mt-14 md:mt-20">
-          <Container>
-            <div className="rounded-2xl border border-black/10 bg-white p-8 shadow-sm">
-              <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <h2 className="text-2xl font-semibold" style={{ color: COLORS.text }}>
-                    Cómo funciona (simple)
-                  </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-black/70">
-                    Registrar → cobrar → evaluar → decidir. Eso es.
+                  <p className="mt-3 text-xs text-black/50">
+                    * Ejemplo para ilustrar lógica. La app define reglas según tu operación.
                   </p>
                 </div>
-                <div className="mt-4 md:mt-0">
-                  <SecondaryButton href="/register">Empezar con mi cartera</SecondaryButton>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* BEFORE / AFTER */}
+        <section className="mt-14 md:mt-20">
+          <div className={container}>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-2xl border bg-white p-8 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                <p className="text-xs font-semibold" style={{ color: COLORS.risk }}>
+                  Sin Limar (lo común)
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold" style={{ color: COLORS.text }}>
+                  Renovaciones por costumbre.
+                </h2>
+                <ul className="mt-4 space-y-3 text-sm leading-6 text-black/70">
+                  <li>• Excel/WhatsApp: información dispersa y decisiones “al tanteo”.</li>
+                  <li>• Multas/intereses inconsistentes: discusiones y pérdidas.</li>
+                  <li>• Atrasos que se normalizan: el riesgo se detecta tarde.</li>
+                  <li>• Capital expuesto: sigues prestando donde ya no conviene.</li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border bg-white p-8 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                <p className="text-xs font-semibold" style={{ color: COLORS.positive }}>
+                  Con Limar (operación con criterio)
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold" style={{ color: COLORS.text }}>
+                  Reglas claras. Decisiones explicables.
+                </h2>
+                <ul className="mt-4 space-y-3 text-sm leading-6 text-black/70">
+                  <li>• Cartera ordenada: saldo, pagos, vencimientos y atrasos en un solo lugar.</li>
+                  <li>• Cálculos automáticos: intereses y multas siempre iguales para todos.</li>
+                  <li>• Riesgo progresivo: señales que suben/bajan por conducta real.</li>
+                  <li>• Conclusión: renovar, reducir o detener con base en datos.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section id="como-funciona" className="mt-14 md:mt-20">
+          <div className={container}>
+            <div className="rounded-2xl border bg-white p-8 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold" style={{ color: COLORS.text }}>
+                    Cómo funciona
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-black/70">
+                    No es “un CRM”. Es un sistema de cartera con criterio: registrar → cobrar → evaluar → decidir.
+                  </p>
                 </div>
+
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0B1F28]"
+                  style={{ background: COLORS.primary }}
+                >
+                  Empezar
+                </Link>
               </div>
 
               <div className="mt-8 grid gap-4 md:grid-cols-4">
                 {[
-                  ["Paso 1", "Crea el préstamo", "Definen condiciones, fechas y reglas desde el inicio."],
-                  ["Paso 2", "Registra pagos", "Pagos parciales o completos actualizan saldo y estado."],
-                  ["Paso 3", "Detecta riesgo", "Vencimientos/atrasos elevan riesgo de forma progresiva."],
-                  ["Paso 4", "Toma criterio", "Conclusión: renovar, reducir o detener con base en datos."],
-                ].map(([step, title, desc]) => (
-                  <div key={step} className="rounded-2xl border border-black/10 p-5">
-                    <p className="text-xs font-medium text-black/60">{step}</p>
-                    <p className="mt-2 font-semibold">{title}</p>
-                    <p className="mt-2 text-sm leading-6 text-black/70">{desc}</p>
+                  { step: "Paso 1", title: "Crea el préstamo", desc: "Condiciones y fechas desde el inicio. Sin ambigüedad." },
+                  { step: "Paso 2", title: "Registra pagos", desc: "Pagos parciales o completos actualizan saldo y estado." },
+                  { step: "Paso 3", title: "Detecta riesgo", desc: "Riesgo progresivo según atrasos, promesas y patrón." },
+                  { step: "Paso 4", title: "Decide renovación", desc: "Renovar, reducir o detener: regla clara y justificable." },
+                ].map((x) => (
+                  <div key={x.step} className="rounded-2xl border p-5" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <p className="text-xs font-medium text-black/60">{x.step}</p>
+                    <p className="mt-2 font-semibold" style={{ color: COLORS.text }}>
+                      {x.title}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-black/70">{x.desc}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-8 rounded-2xl border border-black/10 p-5">
-                <p className="text-sm font-semibold">Estados visuales (sobrios)</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Badge tone="positive">Pagado / Cumple</Badge>
-                  <Badge>Vigente</Badge>
-                  <Badge tone="warning">Por vencer</Badge>
-                  <Badge tone="risk">Atraso / No renovar</Badge>
+              <div className="mt-8 rounded-2xl border p-6" style={{ borderColor: "rgba(0,0,0,0.08)", background: "#fff" }}>
+                <p className="text-sm font-semibold" style={{ color: COLORS.text }}>
+                  Riesgo progresivo (idea)
+                </p>
+                <p className="mt-1 text-xs text-black/60">
+                  Señales pequeñas no te obligan a cortar; señales repetidas sí.
+                </p>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <div className="rounded-xl border p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <p className="text-xs font-semibold" style={{ color: COLORS.positive }}>
+                      Bajo
+                    </p>
+                    <p className="mt-2 text-sm font-semibold">Cumple</p>
+                    <p className="mt-1 text-xs text-black/60">Puntualidad + constancia</p>
+                  </div>
+
+                  <div className="rounded-xl border p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <p className="text-xs font-semibold" style={{ color: COLORS.warning }}>
+                      Medio
+                    </p>
+                    <p className="mt-2 text-sm font-semibold">Se desvía</p>
+                    <p className="mt-1 text-xs text-black/60">Retrasos leves / patrón mixto</p>
+                  </div>
+
+                  <div className="rounded-xl border p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <p className="text-xs font-semibold" style={{ color: COLORS.risk }}>
+                      Alto
+                    </p>
+                    <p className="mt-2 text-sm font-semibold">Ya es pérdida en proceso</p>
+                    <p className="mt-1 text-xs text-black/60">Atraso recurrente / promesa sin pago</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
-        {/* Plans */}
-        <section id="planes" className="mt-14 pb-16 md:mt-20 md:pb-24">
-          <Container>
-            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold" style={{ color: COLORS.text }}>
-                  Planes simples
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-black/70">
-                  Empieza sin fricción y escala cuando la operación lo pida.
-                </p>
+        {/* CRITERIO */}
+        <section id="criterio" className="mt-14 md:mt-20">
+          <div className={container}>
+            <div className="rounded-2xl border bg-white p-8 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+              <h2 className="text-2xl font-semibold" style={{ color: COLORS.text }}>
+                Criterio de renovación
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-black/70">
+                La recomendación no es “mágica”. Es una conclusión determinística con reglas que se pueden explicar.
+              </p>
+
+              <div className="mt-6 overflow-x-auto rounded-2xl border" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                <table className="w-full min-w-[820px] text-left text-sm">
+                  <thead className="bg-white">
+                    <tr className="border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                      <th className="px-5 py-4 text-xs font-semibold text-black/60">Conclusión</th>
+                      <th className="px-5 py-4 text-xs font-semibold text-black/60">Cuándo aplica</th>
+                      <th className="px-5 py-4 text-xs font-semibold text-black/60">Qué proteges</th>
+                      <th className="px-5 py-4 text-xs font-semibold text-black/60">Señal visual</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                      <td className="px-5 py-4 font-semibold" style={{ color: COLORS.positive }}>
+                        Aumentar
+                      </td>
+                      <td className="px-5 py-4 text-black/70">Puntualidad consistente + comportamiento estable.</td>
+                      <td className="px-5 py-4 text-black/70">Crecimiento sano del capital.</td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: COLORS.positive, color: COLORS.positive }}>
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.positive }} />
+                          Verde
+                        </span>
+                      </td>
+                    </tr>
+
+                    <tr className="border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                      <td className="px-5 py-4 font-semibold" style={{ color: COLORS.positive }}>
+                        Mantener
+                      </td>
+                      <td className="px-5 py-4 text-black/70">Cliente estable pero sin margen para aumentar.</td>
+                      <td className="px-5 py-4 text-black/70">Estabilidad sin riesgo extra.</td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: COLORS.positive, color: COLORS.positive }}>
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.positive }} />
+                          Verde
+                        </span>
+                      </td>
+                    </tr>
+
+                    <tr className="border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                      <td className="px-5 py-4 font-semibold" style={{ color: COLORS.warning }}>
+                        Reducir
+                      </td>
+                      <td className="px-5 py-4 text-black/70">Señales mixtas: retrasos leves, patrón irregular.</td>
+                      <td className="px-5 py-4 text-black/70">Reducir exposición antes de que escale.</td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: COLORS.warning, color: COLORS.warning }}>
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.warning }} />
+                          Ámbar
+                        </span>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td className="px-5 py-4 font-semibold" style={{ color: COLORS.risk }}>
+                        No renovar
+                      </td>
+                      <td className="px-5 py-4 text-black/70">Atraso recurrente, promesas sin pago, riesgo alto.</td>
+                      <td className="px-5 py-4 text-black/70">Cortar pérdidas y proteger capital.</td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: COLORS.risk, color: COLORS.risk }}>
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ background: COLORS.risk }} />
+                          Rojo
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <div className="mt-4 md:mt-0">
-                <SecondaryButton href="/register">Crear cuenta</SecondaryButton>
-              </div>
+
+              <p className="mt-4 text-xs text-black/50">
+                La tabla es ilustrativa. Limar adapta criterios a tu operación sin volverlo confuso.
+              </p>
             </div>
+          </div>
+        </section>
+
+        {/* BENEFICIOS */}
+        <section id="beneficios" className="mt-14 md:mt-20">
+          <div className={container}>
+            <h2 className="text-2xl font-semibold" style={{ color: COLORS.text }}>
+              Beneficios reales (no “features” genéricas)
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-black/70">
+              Esto es lo que cambia en la práctica cuando operas con reglas claras.
+            </p>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-black/10 bg-white p-7 shadow-sm">
-                <p className="text-sm font-semibold">Base</p>
-                <p className="mt-2 text-3xl font-semibold" style={{ color: COLORS.text }}>
-                  $0 <span className="ml-2 text-sm font-medium text-black/60">/ mes</span>
-                </p>
-                <p className="mt-3 text-sm leading-6 text-black/70">Para iniciar y validar el flujo.</p>
-                <ul className="mt-5 space-y-2 text-sm text-black/70">
-                  <li>• Registro de clientes y préstamos</li>
-                  <li>• Pagos y estados</li>
-                  <li>• Vencimientos</li>
-                </ul>
-                <div className="mt-6">
-                  <PrimaryButton href="/register">Empezar</PrimaryButton>
+              {[
+                {
+                  title: "Evitas renovaciones malas",
+                  desc: "Cuando el comportamiento ya te está diciendo que no conviene, Limar te lo hace visible a tiempo.",
+                },
+                {
+                  title: "Cuentas claras con el cliente",
+                  desc: "Intereses y multas consistentes: reduces discusiones y recuperas autoridad operativa.",
+                },
+                {
+                  title: "Priorizas cobranza con foco",
+                  desc: "No persigues todo: atiendes lo que realmente pone en riesgo tu capital.",
+                },
+                {
+                  title: "Orden operativo",
+                  desc: "Saldo, pagos, fechas y estados siempre en el mismo lugar. Menos caos, menos errores.",
+                },
+                {
+                  title: "Control del riesgo (progresivo)",
+                  desc: "No reaccionas tarde. El riesgo sube por patrón y te da margen para actuar antes.",
+                },
+                {
+                  title: "Decisiones explicables",
+                  desc: "La conclusión se puede justificar: a tu equipo, a tu socio o a ti mismo.",
+                },
+              ].map((x) => (
+                <div
+                  key={x.title}
+                  className="rounded-2xl border bg-white p-6 shadow-sm"
+                  style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                >
+                  <p className="text-base font-semibold" style={{ color: COLORS.text }}>
+                    {x.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-black/70">{x.desc}</p>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              <div className="rounded-2xl border border-black/10 bg-white p-7 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">Operación</p>
-                  <span
-                    className="rounded-lg px-2 py-1 text-xs font-semibold"
-                    style={{ background: COLORS.secondary, color: COLORS.primary }}
+            <div
+              className="mt-8 rounded-2xl border bg-white p-6 shadow-sm"
+              style={{ borderColor: "rgba(0,0,0,0.08)" }}
+            >
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: COLORS.text }}>
+                    ¿Listo para operar con criterio?
+                  </p>
+                  <p className="mt-1 text-sm text-black/70">Empieza con tu cartera hoy y deja de depender de intuición.</p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0B1F28]"
+                    style={{ background: COLORS.primary }}
                   >
-                    Recomendado
-                  </span>
-                </div>
-                <p className="mt-2 text-3xl font-semibold" style={{ color: COLORS.text }}>
-                  $— <span className="ml-2 text-sm font-medium text-black/60">/ mes</span>
-                </p>
-                <p className="mt-3 text-sm leading-6 text-black/70">
-                  Para operar con riesgo progresivo y criterio de renovación.
-                </p>
-                <ul className="mt-5 space-y-2 text-sm text-black/70">
-                  <li>• Intereses y multas automáticas</li>
-                  <li>• Riesgo progresivo</li>
-                  <li>• Conclusión de renovación</li>
-                </ul>
-                <div className="mt-6">
-                  <PrimaryButton href="/register">Crear cuenta</PrimaryButton>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-black/10 bg-white p-7 shadow-sm">
-                <p className="text-sm font-semibold">Equipo</p>
-                <p className="mt-2 text-3xl font-semibold" style={{ color: COLORS.text }}>
-                  $— <span className="ml-2 text-sm font-medium text-black/60">/ mes</span>
-                </p>
-                <p className="mt-3 text-sm leading-6 text-black/70">
-                  Para multiusuario, permisos y operación más grande.
-                </p>
-                <ul className="mt-5 space-y-2 text-sm text-black/70">
-                  <li>• Roles y permisos</li>
-                  <li>• Auditoría</li>
-                  <li>• Configuración avanzada</li>
-                </ul>
-                <div className="mt-6">
-                  <SecondaryButton href="/register">Hablar con ventas</SecondaryButton>
+                    Crear cuenta
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center justify-center rounded-xl border bg-white px-5 py-3 text-sm font-semibold"
+                    style={{ borderColor: COLORS.primary, color: COLORS.primary }}
+                  >
+                    Iniciar sesión
+                  </Link>
                 </div>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* Footer */}
-            <footer className="mt-12 border-t pt-8" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+        {/* FAQ + FOOTER */}
+        <section id="faq" className="mt-14 pb-16 md:mt-20 md:pb-24">
+          <div className={container}>
+            <div className="rounded-2xl border bg-white p-8 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+              <h2 className="text-2xl font-semibold" style={{ color: COLORS.text }}>
+                Preguntas frecuentes
+              </h2>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                {[
+                  {
+                    q: "¿Limar es para prestamistas pequeños o para equipos?",
+                    a: "Para ambos. El enfoque es operación clara: cartera, riesgo y conclusión. Si trabajas con equipo, se puede escalar a roles/permisos.",
+                  },
+                  {
+                    q: "¿Cómo calcula intereses y multas?",
+                    a: "De forma automática y consistente según reglas definidas. El objetivo es evitar cálculos manuales y mantener criterio parejo.",
+                  },
+                  {
+                    q: "¿Qué significa “riesgo progresivo”?",
+                    a: "Que el riesgo no depende de un evento aislado: se ajusta por patrón de comportamiento (repetición, puntualidad, promesas sin pago, etc.).",
+                  },
+                  {
+                    q: "¿La recomendación de renovación es “IA”?",
+                    a: "No necesitas humo. La recomendación es determinística (reglas claras) para que sea explicable y confiable.",
+                  },
+                ].map((x) => (
+                  <div key={x.q} className="rounded-2xl border p-6" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <p className="text-sm font-semibold" style={{ color: COLORS.text }}>
+                      {x.q}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-black/70">{x.a}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <footer className="mt-10 border-t pt-8" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3">
                   <div
@@ -529,23 +674,23 @@ export default function Page() {
                   </div>
                   <div className="leading-tight">
                     <p className="text-sm font-semibold">Limar</p>
-                    <p className="text-xs text-black/60">Orden, control y criterio.</p>
+                    <p className="text-xs text-black/60">Menos intuición. Más control.</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-black/70">
-                  <Link className="hover:underline" href="/login">
-                    Iniciar sesión
-                  </Link>
-                  <Link className="hover:underline" href="/login">
-                    Crear cuenta
-                  </Link>
+                  <a className="hover:underline" href="#como-funciona">
+                    Cómo funciona
+                  </a>
+                  <a className="hover:underline" href="#criterio">
+                    Criterio
+                  </a>
                   <a className="hover:underline" href="#beneficios">
                     Beneficios
                   </a>
-                  <a className="hover:underline" href="#funciones">
-                    Funciones
-                  </a>
+                  <Link className="hover:underline" href="/login">
+                    Iniciar sesión
+                  </Link>
                 </div>
               </div>
 
@@ -553,7 +698,6 @@ export default function Page() {
                 <p className="text-xs text-black/50">
                   © {new Date().getFullYear()} Limar. Todos los derechos reservados.
                 </p>
-
                 <p className="text-xs text-black/50">
                   Made by{" "}
                   <a
@@ -568,7 +712,7 @@ export default function Page() {
                 </p>
               </div>
             </footer>
-          </Container>
+          </div>
         </section>
       </main>
     </div>

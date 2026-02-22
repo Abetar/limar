@@ -96,14 +96,27 @@ export default async function BorrowerDetailPage({
           <p className="mt-1 text-sm text-black/55">
             {borrower.phone ?? "—"} · Ref: {borrower.externalRef ?? "—"}
           </p>
+
+          {borrower.notes ? (
+            <p className="mt-2 max-w-3xl text-sm text-black/55">{borrower.notes}</p>
+          ) : null}
         </div>
 
-        <Link
-          href={`/loans/new?borrowerId=${borrower.id}`}
-          className="inline-flex w-fit rounded-xl bg-[#0F2A36] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0B1F28]"
-        >
-          + Nuevo préstamo
-        </Link>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Link
+            href={`/borrowers/${borrower.id}/edit`}
+            className="inline-flex w-fit rounded-xl border border-[#0F2A36] bg-white px-4 py-2 text-sm font-semibold text-[#0F2A36] hover:bg-black/5"
+          >
+            Editar deudor
+          </Link>
+
+          <Link
+            href={`/loans/new?borrowerId=${borrower.id}`}
+            className="inline-flex w-fit rounded-xl bg-[#0F2A36] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0B1F28]"
+          >
+            + Nuevo préstamo
+          </Link>
+        </div>
       </div>
 
       <Card>
@@ -116,7 +129,11 @@ export default async function BorrowerDetailPage({
               <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
                 <div className="text-xs text-black/55">Recomendación</div>
                 <div className="mt-2">
-                  <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(String(snap.conclusion))}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(
+                      String(snap.conclusion)
+                    )}`}
+                  >
                     {conclusionLabel(String(snap.conclusion))}
                   </span>
                 </div>
@@ -155,7 +172,10 @@ export default async function BorrowerDetailPage({
       </Card>
 
       <Card>
-        <CardHeader title="Préstamos" subtitle="Entra a cualquier préstamo para ver calendario y registrar pagos." />
+        <CardHeader
+          title="Préstamos"
+          subtitle="Entra a cualquier préstamo para ver calendario y registrar pagos."
+        />
         <CardBody>
           {borrower.loans.length === 0 ? (
             <div className="text-sm text-black/55">Aún no tiene préstamos.</div>
@@ -172,7 +192,8 @@ export default async function BorrowerDetailPage({
                       {frequencyLabel(String(l.frequency))} · {l.termCount} pagos
                     </div>
                     <div className="mt-1 text-xs text-black/55">
-                      Cuota: {mxn(Number(l.expectedInstallment))} · Próximo pago: {fmtDate(l.nextDueDate)}
+                      Cuota: {mxn(Number(l.expectedInstallment))} · Próximo pago:{" "}
+                      {fmtDate(l.nextDueDate)}
                     </div>
                   </div>
 

@@ -37,16 +37,13 @@ export async function registerPaymentAction(formData: FormData) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Todo en transacción para consistencia
   const borrowerId = await prisma.$transaction(async (tx) => {
-    // Trae loan + borrowerId
     const loan = await tx.loan.findFirst({
       where: { id: loanId, organizationId: orgId, deletedAt: null },
       select: { id: true, borrowerId: true },
     });
     if (!loan) throw new Error("Loan no encontrado");
 
-    // (MVP) Marcar como MISSED cuotas vencidas no pagadas
     await tx.paymentSchedule.updateMany({
       where: {
         organizationId: orgId,
@@ -58,7 +55,6 @@ export async function registerPaymentAction(formData: FormData) {
       data: { status: ScheduleStatus.MISSED },
     });
 
-    // Cuotas pendientes (FIFO)
     const schedules = await tx.paymentSchedule.findMany({
       where: {
         organizationId: orgId,
@@ -71,7 +67,6 @@ export async function registerPaymentAction(formData: FormData) {
 
     let remaining = amount;
 
-    // Crea el Payment principal (registro del abono)
     await tx.payment.create({
       data: {
         organizationId: orgId,
@@ -95,9 +90,7 @@ export async function registerPaymentAction(formData: FormData) {
       const newPaid = paidSoFar + applied;
       const fullyPaid = newPaid >= expected - 0.0001;
 
-      const lateDays = fullyPaid
-        ? Math.max(0, daysBetween(paidAt, item.dueDate))
-        : item.lateDays;
+      const lateDays = fullyPaid ? Math.max(0, daysBetween(paidAt, item.dueDate)) : item.lateDays;
 
       await tx.paymentSchedule.update({
         where: { id: item.id },
@@ -112,7 +105,6 @@ export async function registerPaymentAction(formData: FormData) {
       remaining -= applied;
     }
 
-    // Recalcula nextDueDate del loan
     const nextPending = await tx.paymentSchedule.findFirst({
       where: {
         organizationId: orgId,
@@ -132,9 +124,74 @@ export async function registerPaymentAction(formData: FormData) {
     return loan.borrowerId;
   });
 
-  // ✅ Recalcula snapshots fuera de la transacción (más rápido/seguro)
   await recalcLoanSnapshot(orgId, loanId);
   await recalcBorrowerSnapshot(orgId, borrowerId);
 
   redirect(`/loans/${loanId}`);
+}
+
+/**
+ * ✅ BORRADO FORZADO (soft delete) del préstamo + todo lo colgado.
+ * Esto permite borrar aunque tenga pagos.
+ */
+export async function deleteLoanAction(formData: FormData) {
+  const orgId = await requireOrgId();
+  const loanId = s(formData, "loanId");
+  if (!loanId) throw new Error("loanId requerido");
+
+  const now = new Date();
+
+  const borrowerId = await prisma.$transaction(async (tx) => {
+    const loan = await tx.loan.findFirst({
+      where: { id: loanId, organizationId: orgId, deletedAt: null },
+      select: { id: true, borrowerId: true },
+    });
+    if (!loan) throw new Error("Loan no encontrado");
+
+    // 1) Soft-delete dependencias
+    await tx.payment.updateMany({
+      where: { organizationId: orgId, loanId, deletedAt: null },
+      data: { deletedAt: now, updatedAt: now },
+    });
+
+    await tx.paymentSchedule.updateMany({
+      where: { organizationId: orgId, loanId, deletedAt: null },
+      data: { deletedAt: now, updatedAt: now },
+    });
+
+    await tx.penalty.updateMany({
+      where: { organizationId: orgId, loanId, deletedAt: null },
+      data: { deletedAt: now, updatedAt: now },
+    });
+
+    await tx.loanRestructure.updateMany({
+      where: { organizationId: orgId, loanId, deletedAt: null },
+      data: { deletedAt: now, updatedAt: now },
+    });
+
+    // snapshots LOAN ligados a este loan
+    await tx.riskSnapshot.updateMany({
+      where: { organizationId: orgId, scope: "LOAN", loanId },
+      data: { /* RiskSnapshot no tiene updatedAt */ },
+    });
+
+    // Contract docs
+    await tx.contractDocument.updateMany({
+      where: { organizationId: orgId, loanId, deletedAt: null },
+      data: { deletedAt: now, updatedAt: now },
+    });
+
+    // 2) Soft-delete del loan
+    await tx.loan.update({
+      where: { id: loanId },
+      data: { deletedAt: now, updatedAt: now },
+    });
+
+    return loan.borrowerId;
+  });
+
+  // Recalcular borrower snapshot por si afectaba su lectura
+  await recalcBorrowerSnapshot(orgId, borrowerId);
+
+  redirect(`/borrowers/${borrowerId}`);
 }

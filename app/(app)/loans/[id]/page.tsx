@@ -3,7 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireOrgId } from "@/lib/auth";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { registerPaymentAction } from "./server-actions";
+import { registerPaymentAction, deleteLoanAction } from "./server-actions";
+import { DeleteLoanButton } from "./DeleteLoanButton";
 import {
   conclusionLabel,
   trendLabel,
@@ -17,10 +18,8 @@ function fmtDate(d?: Date | null) {
 }
 
 function badgeClassConclusion(conclusion: string) {
-  if (conclusion === "NO_RENOVAR")
-    return "bg-[#B23A3A]/10 text-[#B23A3A] border-[#B23A3A]/20";
-  if (conclusion === "REDUCIR")
-    return "bg-[#C88A1A]/10 text-[#C88A1A] border-[#C88A1A]/20";
+  if (conclusion === "NO_RENOVAR") return "bg-[#B23A3A]/10 text-[#B23A3A] border-[#B23A3A]/20";
+  if (conclusion === "REDUCIR") return "bg-[#C88A1A]/10 text-[#C88A1A] border-[#C88A1A]/20";
   return "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/20";
 }
 
@@ -46,9 +45,20 @@ export default async function LoanDetailPage({
       scheduleItems: {
         where: { deletedAt: null },
         orderBy: { installmentNumber: "asc" },
+        select: {
+          id: true,
+          installmentNumber: true,
+          dueDate: true,
+          expectedAmount: true,
+          paidAmount: true,
+          status: true,
+          paidAt: true,
+          lateDays: true,
+        },
       },
       payments: {
         where: { deletedAt: null, status: "POSTED" },
+        select: { id: true, amount: true, paidAt: true },
         orderBy: { paidAt: "desc" },
         take: 10,
       },
@@ -83,8 +93,13 @@ export default async function LoanDetailPage({
   const totalPaid = loan.payments.reduce((acc, p) => acc + Number(p.amount), 0);
   const remainingEst = Math.max(0, totalExpected - totalPaid);
 
+  // Solo permitir eliminar si NO hay pagos registrados (tu regla actual)
+  // const canDelete = loan.payments.length === 0;
+  const canDelete = true
+
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[#1F1F1F]">Detalle del préstamo</h1>
@@ -95,11 +110,15 @@ export default async function LoanDetailPage({
             · {frequencyLabel(String(loan.frequency))} · {loan.termCount} pagos
           </p>
         </div>
-        <div className="text-sm text-black/55">
-          Próximo pago: <span className="font-semibold text-[#1F1F1F]">{fmtDate(loan.nextDueDate)}</span>
+
+        <div className="flex gap-2">
+          {canDelete ? (
+            <DeleteLoanButton loanId={loan.id} borrowerName={loan.borrower.fullName} deleteLoanAction={deleteLoanAction} />
+          ) : null}
         </div>
       </div>
 
+      {/* Resumen */}
       <div className="grid gap-3 sm:grid-cols-4">
         <Card>
           <CardBody>
@@ -115,7 +134,7 @@ export default async function LoanDetailPage({
         </Card>
         <Card>
           <CardBody>
-            <div className="text-xs text-black/55">Total a cobrar</div>
+            <div className="text-xs text-black/55">Total esperado</div>
             <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">{moneyLabel(totalExpected)}</div>
           </CardBody>
         </Card>
@@ -127,6 +146,7 @@ export default async function LoanDetailPage({
         </Card>
       </div>
 
+      {/* ✅ Registrar pago (esto es lo que “se perdió”) */}
       <Card>
         <CardHeader title="Registrar pago" subtitle="Se aplica a los pagos más viejos primero (FIFO)." />
         <CardBody>
@@ -164,8 +184,9 @@ export default async function LoanDetailPage({
         </CardBody>
       </Card>
 
+      {/* Calendario */}
       <Card>
-        <CardHeader title="Pagos del calendario" subtitle="Aquí ves qué está pagado, abonado, pendiente o vencido." />
+        <CardHeader title="Pagos del calendario" subtitle="Pagado, abonado, pendiente o vencido." />
         <CardBody>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -188,7 +209,11 @@ export default async function LoanDetailPage({
                     <td className="py-2">{moneyLabel(Number(s.expectedAmount))}</td>
                     <td className="py-2">{moneyLabel(Number(s.paidAmount))}</td>
                     <td className="py-2">
-                      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClassSchedule(String(s.status))}`}>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClassSchedule(
+                          String(s.status)
+                        )}`}
+                      >
                         {scheduleStatusLabel(String(s.status))}
                       </span>
                     </td>
@@ -202,6 +227,7 @@ export default async function LoanDetailPage({
         </CardBody>
       </Card>
 
+      {/* Snapshot */}
       <Card>
         <CardHeader title="Recomendación (para renovar)" subtitle="Reglas automáticas según historial de pagos." />
         <CardBody>
@@ -212,7 +238,11 @@ export default async function LoanDetailPage({
               <div className="text-sm text-black/55">
                 <div className="text-xs text-black/55">Recomendación</div>
                 <div className="mt-1">
-                  <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClassConclusion(String(snap.conclusion))}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClassConclusion(
+                      String(snap.conclusion)
+                    )}`}
+                  >
                     {conclusionLabel(String(snap.conclusion))}
                   </span>
                 </div>

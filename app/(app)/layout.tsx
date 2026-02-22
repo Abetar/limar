@@ -1,5 +1,6 @@
 // app/(app)/layout.tsx
 import Link from "next/link";
+import LogoutButton from "@/components/ui/LogoutButton";
 
 function NavItem({ href, label }: { href: string; label: string }) {
   return (
@@ -30,15 +31,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
 
-          <div className="text-xs text-white/70">Sesión activa</div>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:block text-xs text-white/70">Sesión activa</div>
+            <LogoutButton />
+          </div>
         </div>
 
         <div className="sm:hidden border-t border-white/10">
-          <div className="mx-auto flex max-w-6xl gap-1 px-3 py-2 overflow-x-auto">
-            <NavItem href="/dashboard" label="Resumen" />
-            <NavItem href="/borrowers" label="Deudores" />
-            <NavItem href="/loans" label="Préstamos" />
-            <NavItem href="/settings" label="Ajustes" />
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2">
+            <div className="flex gap-1 overflow-x-auto">
+              <NavItem href="/dashboard" label="Resumen" />
+              <NavItem href="/borrowers" label="Deudores" />
+              <NavItem href="/loans" label="Préstamos" />
+              <NavItem href="/settings" label="Ajustes" />
+            </div>
+            <LogoutButton />
           </div>
         </div>
       </header>

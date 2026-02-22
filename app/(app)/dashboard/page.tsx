@@ -1,7 +1,7 @@
-// app/(app)/dashboard/page.tsx
 import { prisma } from "@/lib/prisma";
 import { requireOrgId } from "@/lib/auth";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { DashboardCharts } from "./DashboardCharts";
 
 function mxn(n: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -44,7 +44,6 @@ function badgeClass(conclusion: string) {
     return "bg-[#B23A3A]/10 text-[#B23A3A] border-[#B23A3A]/20";
   if (conclusion === "REDUCIR")
     return "bg-[#C88A1A]/10 text-[#C88A1A] border-[#C88A1A]/20";
-  // MANTENER / AUMENTAR
   return "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/20";
 }
 
@@ -137,6 +136,41 @@ export default async function DashboardPage() {
           include: { borrower: true },
         });
 
+  // =========================
+  // Charts data (server -> client)
+  // =========================
+
+  // Donut A: cartera al corriente vs con atraso (por préstamo activo)
+  const totalActivos = await prisma.loan.count({
+    where: { organizationId: orgId, deletedAt: null, status: "ACTIVE" },
+  });
+
+  const conAtraso = prestamosConVencidos;
+  const alCorriente = Math.max(0, totalActivos - conAtraso);
+
+  const carteraEstado = [
+    { name: "Al corriente", value: alCorriente },
+    { name: "Con atraso", value: conAtraso },
+  ];
+
+  // Donut B: préstamos activos por frecuencia
+  const byFrequency = await prisma.loan.groupBy({
+    by: ["frequency"],
+    where: { organizationId: orgId, deletedAt: null, status: "ACTIVE" },
+    _count: { _all: true },
+  });
+
+  const freqLabel = (f: string) => {
+    if (f === "WEEKLY") return "Semanal";
+    if (f === "BIWEEKLY") return "Quincenal";
+    if (f === "MONTHLY") return "Mensual";
+    return f;
+  };
+
+  const frecuencias = (byFrequency ?? [])
+    .map((x) => ({ name: freqLabel(String(x.frequency)), value: x._count._all }))
+    .sort((a, b) => b.value - a.value);
+
   return (
     <div className="space-y-5">
       <div>
@@ -195,6 +229,9 @@ export default async function DashboardPage() {
           </CardBody>
         </Card>
       </div>
+
+      {/* Charts */}
+      <DashboardCharts carteraEstado={carteraEstado} frecuencias={frecuencias} />
 
       <Card>
         <CardHeader
