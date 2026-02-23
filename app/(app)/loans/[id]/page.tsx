@@ -18,15 +18,20 @@ function fmtDate(d?: Date | null) {
 }
 
 function badgeClassConclusion(conclusion: string) {
-  if (conclusion === "NO_RENOVAR") return "bg-[#B23A3A]/10 text-[#B23A3A] border-[#B23A3A]/20";
-  if (conclusion === "REDUCIR") return "bg-[#C88A1A]/10 text-[#C88A1A] border-[#C88A1A]/20";
+  if (conclusion === "NO_RENOVAR")
+    return "bg-[#B23A3A]/10 text-[#B23A3A] border-[#B23A3A]/20";
+  if (conclusion === "REDUCIR")
+    return "bg-[#C88A1A]/10 text-[#C88A1A] border-[#C88A1A]/20";
   return "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/20";
 }
 
 function badgeClassSchedule(status: string) {
-  if (status === "PAID") return "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/20";
-  if (status === "PARTIAL") return "bg-[#C88A1A]/10 text-[#C88A1A] border-[#C88A1A]/20";
-  if (status === "MISSED") return "bg-[#B23A3A]/10 text-[#B23A3A] border-[#B23A3A]/20";
+  if (status === "PAID")
+    return "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/20";
+  if (status === "PARTIAL")
+    return "bg-[#C88A1A]/10 text-[#C88A1A] border-[#C88A1A]/20";
+  if (status === "MISSED")
+    return "bg-[#B23A3A]/10 text-[#B23A3A] border-[#B23A3A]/20";
   return "bg-black/5 text-black/70 border-black/10";
 }
 
@@ -74,7 +79,9 @@ export default async function LoanDetailPage({
     return (
       <div className="rounded-2xl border border-black/10 bg-white p-6">
         <div className="text-sm font-semibold text-[#1F1F1F]">No encontrado</div>
-        <div className="mt-1 text-sm text-black/55">Este préstamo no existe (o no es de tu cuenta).</div>
+        <div className="mt-1 text-sm text-black/55">
+          Este préstamo no existe (o no es de tu cuenta).
+        </div>
         <Link
           href="/loans"
           className="mt-4 inline-flex rounded-xl border border-[#0F2A36] bg-white px-4 py-2 text-sm font-semibold text-[#0F2A36] hover:bg-black/5"
@@ -93,27 +100,44 @@ export default async function LoanDetailPage({
   const totalPaid = loan.payments.reduce((acc, p) => acc + Number(p.amount), 0);
   const remainingEst = Math.max(0, totalExpected - totalPaid);
 
-  // Solo permitir eliminar si NO hay pagos registrados (tu regla actual)
-  // const canDelete = loan.payments.length === 0;
-  const canDelete = true
+  const canDelete = true;
+
+  const pdfHref = `/api/loans/${loan.id}/contract`;
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[#1F1F1F]">Detalle del préstamo</h1>
+          <h1 className="text-xl font-semibold text-[#1F1F1F]">
+            Detalle del préstamo
+          </h1>
           <p className="mt-1 text-sm text-black/55">
-            <Link className="font-semibold text-[#0F2A36] hover:underline" href={`/borrowers/${loan.borrower.id}`}>
+            <Link
+              className="font-semibold text-[#0F2A36] hover:underline"
+              href={`/borrowers/${loan.borrower.id}`}
+            >
               {loan.borrower.fullName}
             </Link>{" "}
             · {frequencyLabel(String(loan.frequency))} · {loan.termCount} pagos
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* ✅ Descargar contrato PDF (server route) */}
+          <a
+            href={pdfHref}
+            className="inline-flex items-center rounded-xl border border-[#0F2A36] bg-white px-4 py-2 text-sm font-semibold text-[#0F2A36] hover:bg-black/5"
+          >
+            Descargar contrato (PDF)
+          </a>
+
           {canDelete ? (
-            <DeleteLoanButton loanId={loan.id} borrowerName={loan.borrower.fullName} deleteLoanAction={deleteLoanAction} />
+            <DeleteLoanButton
+              loanId={loan.id}
+              borrowerName={loan.borrower.fullName}
+              deleteLoanAction={deleteLoanAction}
+            />
           ) : null}
         </div>
       </div>
@@ -123,38 +147,51 @@ export default async function LoanDetailPage({
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Prestado</div>
-            <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">{moneyLabel(principal)}</div>
+            <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">
+              {moneyLabel(principal)}
+            </div>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Cuota</div>
-            <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">{moneyLabel(cuota)}</div>
+            <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">
+              {moneyLabel(cuota)}
+            </div>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Total esperado</div>
-            <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">{moneyLabel(totalExpected)}</div>
+            <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">
+              {moneyLabel(totalExpected)}
+            </div>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Falta (aprox.)</div>
-            <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">{moneyLabel(remainingEst)}</div>
+            <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">
+              {moneyLabel(remainingEst)}
+            </div>
           </CardBody>
         </Card>
       </div>
 
-      {/* ✅ Registrar pago (esto es lo que “se perdió”) */}
+      {/* Registrar pago */}
       <Card>
-        <CardHeader title="Registrar pago" subtitle="Se aplica a los pagos más viejos primero (FIFO)." />
+        <CardHeader
+          title="Registrar pago"
+          subtitle="Se aplica a los pagos más viejos primero (FIFO)."
+        />
         <CardBody>
           <form action={registerPaymentAction} className="grid gap-3 sm:grid-cols-4">
             <input type="hidden" name="loanId" value={loan.id} />
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-[#1F1F1F]">Fecha</label>
+              <label className="block text-sm font-medium text-[#1F1F1F]">
+                Fecha
+              </label>
               <input
                 type="date"
                 name="paidAt"
@@ -164,7 +201,9 @@ export default async function LoanDetailPage({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1F1F1F]">Monto</label>
+              <label className="block text-sm font-medium text-[#1F1F1F]">
+                Monto
+              </label>
               <input
                 type="number"
                 name="amount"
@@ -218,7 +257,9 @@ export default async function LoanDetailPage({
                       </span>
                     </td>
                     <td className="py-2">{fmtDate(s.paidAt)}</td>
-                    <td className="py-2">{s.lateDays != null ? `${s.lateDays} días` : "—"}</td>
+                    <td className="py-2">
+                      {s.lateDays != null ? `${s.lateDays} días` : "—"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -229,10 +270,15 @@ export default async function LoanDetailPage({
 
       {/* Snapshot */}
       <Card>
-        <CardHeader title="Recomendación (para renovar)" subtitle="Reglas automáticas según historial de pagos." />
+        <CardHeader
+          title="Recomendación (para renovar)"
+          subtitle="Reglas automáticas según historial de pagos."
+        />
         <CardBody>
           {!snap ? (
-            <div className="text-sm text-black/55">Aún no hay suficiente historial para recomendar.</div>
+            <div className="text-sm text-black/55">
+              Aún no hay suficiente historial para recomendar.
+            </div>
           ) : (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-black/55">
@@ -250,22 +296,30 @@ export default async function LoanDetailPage({
 
               <div className="text-sm">
                 <div className="text-xs text-black/55">Límite sugerido</div>
-                <div className="mt-1 font-semibold text-[#1F1F1F]">{moneyLabel(Number(snap.suggestedLimit))}</div>
+                <div className="mt-1 font-semibold text-[#1F1F1F]">
+                  {moneyLabel(Number(snap.suggestedLimit))}
+                </div>
               </div>
 
               <div className="text-sm">
                 <div className="text-xs text-black/55">Pagos tarde</div>
-                <div className="mt-1 font-semibold text-[#1F1F1F]">{snap.pagosTardePct}%</div>
+                <div className="mt-1 font-semibold text-[#1F1F1F]">
+                  {snap.pagosTardePct}%
+                </div>
               </div>
 
               <div className="text-sm">
                 <div className="text-xs text-black/55">Atraso promedio</div>
-                <div className="mt-1 font-semibold text-[#1F1F1F]">{snap.atrasoPromedioDias} días</div>
+                <div className="mt-1 font-semibold text-[#1F1F1F]">
+                  {snap.atrasoPromedioDias} días
+                </div>
               </div>
 
               <div className="text-sm">
                 <div className="text-xs text-black/55">Tendencia</div>
-                <div className="mt-1 font-semibold text-[#1F1F1F]">{trendLabel(String(snap.trend))}</div>
+                <div className="mt-1 font-semibold text-[#1F1F1F]">
+                  {trendLabel(String(snap.trend))}
+                </div>
               </div>
             </div>
           )}
