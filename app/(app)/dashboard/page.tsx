@@ -1,3 +1,5 @@
+// app/(app)/dashboard/page.tsx
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireOrgId } from "@/lib/auth";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -47,8 +49,92 @@ function badgeClass(conclusion: string) {
   return "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/20";
 }
 
-export default async function DashboardPage() {
+// =========================
+// Próximos cobros helpers
+// =========================
+type CobroWindow = "hoy" | "7d" | "30d";
+
+function windowLabel(w: CobroWindow) {
+  if (w === "hoy") return "Hoy";
+  if (w === "7d") return "7 días";
+  return "30 días";
+}
+
+function scheduleStatusLabelLocal(status: string) {
+  switch (status) {
+    case "PENDING":
+      return "Pendiente";
+    case "PARTIAL":
+      return "Abonado";
+    case "MISSED":
+      return "Vencido";
+    case "PAID":
+      return "Pagado";
+    default:
+      return status;
+  }
+}
+
+function badgeClassScheduleLocal(status: string) {
+  if (status === "PAID")
+    return "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/20";
+  if (status === "PARTIAL")
+    return "bg-[#C88A1A]/10 text-[#C88A1A] border-[#C88A1A]/20";
+  if (status === "MISSED")
+    return "bg-[#B23A3A]/10 text-[#B23A3A] border-[#B23A3A]/20";
+  return "bg-black/5 text-black/70 border-black/10";
+}
+
+function startOfDayInTZ(timeZone: string) {
+  const now = new Date();
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const y = Number(parts.find((p) => p.type === "year")?.value);
+  const m = Number(parts.find((p) => p.type === "month")?.value);
+  const d = Number(parts.find((p) => p.type === "day")?.value);
+
+  const utcGuess = Date.UTC(y, m - 1, d, 0, 0, 0);
+
+  const tzName = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "shortOffset",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .formatToParts(new Date(utcGuess))
+    .find((p) => p.type === "timeZoneName")?.value;
+
+  const match = tzName?.match(/GMT([+-]\d{1,2})(?::(\d{2}))?/);
+  const hours = match ? Number(match[1]) : 0;
+  const mins = match?.[2] ? Number(match[2]) : 0;
+  const offsetMinutes = hours * 60 + (hours >= 0 ? mins : -mins);
+
+  return new Date(Date.UTC(y, m - 1, d, 0, 0, 0) - offsetMinutes * 60 * 1000);
+}
+
+function addDaysUTC(date: Date, days: number) {
+  const d = new Date(date);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d;
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ cobros?: CobroWindow }>;
+}) {
   const orgId = await requireOrgId();
+
+  const sp = await searchParams;
+  const cobrosWindow: CobroWindow =
+    (sp?.cobros as CobroWindow) ?? "7d";
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -171,6 +257,71 @@ export default async function DashboardPage() {
     .map((x) => ({ name: freqLabel(String(x.frequency)), value: x._count._all }))
     .sort((a, b) => b.value - a.value);
 
+  // =========================
+  // Próximos cobros (con filtro)
+  // =========================
+  const tz = "America/Mexico_City";
+  const todayStart = startOfDayInTZ(tz);
+  const tomorrowStart = addDaysUTC(todayStart, 1);
+
+  const windowDays = cobrosWindow === "hoy" ? 1 : cobrosWindow === "7d" ? 7 : 30;
+  const windowEnd = addDaysUTC(todayStart, windowDays);
+
+  const upcoming = await prisma.paymentSchedule.findMany({
+    where: {
+      organizationId: orgId,
+      deletedAt: null,
+      status: { in: ["PENDING", "PARTIAL", "MISSED"] },
+      dueDate: { gte: todayStart, lt: windowEnd },
+      loan: {
+        deletedAt: null,
+        status: "ACTIVE",
+        borrower: { deletedAt: null },
+      },
+    },
+    orderBy: [{ dueDate: "asc" }, { installmentNumber: "asc" }],
+    take: 50,
+    select: {
+      id: true,
+      loanId: true,
+      installmentNumber: true,
+      dueDate: true,
+      expectedAmount: true,
+      paidAmount: true,
+      status: true,
+      loan: { select: { borrower: { select: { fullName: true } } } },
+    },
+  });
+
+  const cobrosHoy = await prisma.paymentSchedule.findMany({
+    where: {
+      organizationId: orgId,
+      deletedAt: null,
+      status: { in: ["PENDING", "PARTIAL", "MISSED"] },
+      dueDate: { gte: todayStart, lt: tomorrowStart },
+      loan: {
+        deletedAt: null,
+        status: "ACTIVE",
+        borrower: { deletedAt: null },
+      },
+    },
+    select: { expectedAmount: true, paidAmount: true },
+  });
+
+  const totalHoyPendiente = cobrosHoy.reduce((acc, x) => {
+    const expected = Number(x.expectedAmount);
+    const paid = Number(x.paidAmount);
+    return acc + Math.max(0, expected - paid);
+  }, 0);
+
+  const totalVentanaPendiente = upcoming.reduce((acc, x) => {
+    const expected = Number(x.expectedAmount);
+    const paid = Number(x.paidAmount);
+    return acc + Math.max(0, expected - paid);
+  }, 0);
+
+  const countHoy = cobrosHoy.length;
+
   return (
     <div className="space-y-5">
       <div>
@@ -232,6 +383,136 @@ export default async function DashboardPage() {
 
       {/* Charts */}
       <DashboardCharts carteraEstado={carteraEstado} frecuencias={frecuencias} />
+
+      {/* Próximos cobros con filtro */}
+      <Card>
+        <CardHeader
+          title="Próximos cobros"
+          subtitle="Incluye los que se cobran hoy. Usa tu horario de México."
+        />
+        <CardBody>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-black/55">
+              Mostrando:{" "}
+              <span className="font-semibold text-[#1F1F1F]">
+                {windowLabel(cobrosWindow)}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {(["hoy", "7d", "30d"] as CobroWindow[]).map((w) => {
+                const active = w === cobrosWindow;
+                return (
+                  <Link
+                    key={w}
+                    href={`/dashboard?cobros=${w}`}
+                    className={
+                      active
+                        ? "rounded-full bg-[#0F2A36] px-3 py-1.5 text-xs font-semibold text-white"
+                        : "rounded-full border border-black/15 bg-white px-3 py-1.5 text-xs font-semibold text-[#0F2A36] hover:bg-black/5"
+                    }
+                  >
+                    {windowLabel(w)}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
+              <div className="text-xs text-black/55">Cobros hoy</div>
+              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">
+                {countHoy}
+              </div>
+              <div className="mt-1 text-xs text-black/55">
+                Total pendiente hoy:{" "}
+                <span className="font-semibold">{mxn(totalHoyPendiente)}</span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
+              <div className="text-xs text-black/55">Total pendiente</div>
+              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">
+                {mxn(totalVentanaPendiente)}
+              </div>
+              <div className="mt-1 text-xs text-black/55">
+                En {windowLabel(cobrosWindow).toLowerCase()}.
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-black/10 bg-white p-3">
+              <div className="text-xs text-black/55">Tip</div>
+              <div className="mt-1 text-sm text-black/60">
+                Abre un cobro para registrar pago rápido.
+              </div>
+            </div>
+
+            <div className="sm:col-span-3 rounded-2xl border border-black/10 bg-white p-3">
+              {upcoming.length === 0 ? (
+                <div className="text-sm text-black/55">
+                  No hay cobros en este rango.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {upcoming.map((x) => {
+                    const expected = Number(x.expectedAmount);
+                    const paid = Number(x.paidAmount);
+                    const pendiente = Math.max(0, expected - paid);
+
+                    const isToday =
+                      x.dueDate >= todayStart && x.dueDate < tomorrowStart;
+
+                    return (
+                      <Link
+                        key={x.id}
+                        href={`/loans/${x.loanId}`}
+                        className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 hover:bg-black/5"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <div className="truncate text-sm font-semibold text-[#1F1F1F]">
+                              {x.loan.borrower.fullName}
+                            </div>
+
+                            {isToday ? (
+                              <span className="rounded-full border border-[#0F2A36]/20 bg-[#0F2A36]/10 px-2 py-0.5 text-xs font-semibold text-[#0F2A36]">
+                                Hoy
+                              </span>
+                            ) : null}
+
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClassScheduleLocal(
+                                String(x.status)
+                              )}`}
+                            >
+                              {scheduleStatusLabelLocal(String(x.status))}
+                            </span>
+                          </div>
+
+                          <div className="mt-1 text-xs text-black/55">
+                            Pago #{x.installmentNumber} · Vence:{" "}
+                            {new Date(x.dueDate).toLocaleDateString("es-MX")}
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-[#0F2A36]">
+                            {mxn(pendiente)}
+                          </div>
+                          <div className="text-xs text-black/50">
+                            esperado: {mxn(expected)}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardBody>
+      </Card>
 
       <Card>
         <CardHeader
