@@ -133,8 +133,7 @@ export default async function DashboardPage({
   const orgId = await requireOrgId();
 
   const sp = await searchParams;
-  const cobrosWindow: CobroWindow =
-    (sp?.cobros as CobroWindow) ?? "7d";
+  const cobrosWindow: CobroWindow = (sp?.cobros as CobroWindow) ?? "7d";
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -185,10 +184,7 @@ export default async function DashboardPage({
     select: {
       id: true,
       scheduleItems: {
-        where: {
-          deletedAt: null,
-          status: { in: ["PENDING", "PARTIAL", "MISSED"] },
-        },
+        where: { deletedAt: null, status: { in: ["PENDING", "PARTIAL", "MISSED"] } },
         select: { id: true },
       },
     },
@@ -225,8 +221,6 @@ export default async function DashboardPage({
   // =========================
   // Charts data (server -> client)
   // =========================
-
-  // Donut A: cartera al corriente vs con atraso (por préstamo activo)
   const totalActivos = await prisma.loan.count({
     where: { organizationId: orgId, deletedAt: null, status: "ACTIVE" },
   });
@@ -239,7 +233,6 @@ export default async function DashboardPage({
     { name: "Con atraso", value: conAtraso },
   ];
 
-  // Donut B: préstamos activos por frecuencia
   const byFrequency = await prisma.loan.groupBy({
     by: ["frequency"],
     where: { organizationId: orgId, deletedAt: null, status: "ACTIVE" },
@@ -323,7 +316,7 @@ export default async function DashboardPage({
   const countHoy = cobrosHoy.length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 overflow-x-hidden">
       <div>
         <h1 className="text-xl font-semibold text-[#1F1F1F]">Resumen</h1>
         <p className="mt-1 text-sm text-black/55">
@@ -335,48 +328,32 @@ export default async function DashboardPage({
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Prestado en la calle</div>
-            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
-              {mxn(prestadoEnLaCalle)}
-            </div>
-            <div className="mt-2 text-xs text-black/50">
-              Suma de lo prestado en préstamos activos.
-            </div>
+            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{mxn(prestadoEnLaCalle)}</div>
+            <div className="mt-2 text-xs text-black/50">Suma de lo prestado en préstamos activos.</div>
           </CardBody>
         </Card>
 
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Por cobrar (aprox.)</div>
-            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
-              {mxn(porCobrarAprox)}
-            </div>
-            <div className="mt-2 text-xs text-black/50">
-              Total esperado menos lo ya pagado.
-            </div>
+            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{mxn(porCobrarAprox)}</div>
+            <div className="mt-2 text-xs text-black/50">Total esperado menos lo ya pagado.</div>
           </CardBody>
         </Card>
 
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Pagos vencidos</div>
-            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
-              {prestamosConVencidos}
-            </div>
-            <div className="mt-2 text-xs text-black/50">
-              Préstamos que ya traen pagos atrasados.
-            </div>
+            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{prestamosConVencidos}</div>
+            <div className="mt-2 text-xs text-black/50">Préstamos que ya traen pagos atrasados.</div>
           </CardBody>
         </Card>
 
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Ya casi terminan</div>
-            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
-              {yaCasiTerminan}
-            </div>
-            <div className="mt-2 text-xs text-black/50">
-              2 pagos o menos por cubrir.
-            </div>
+            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{yaCasiTerminan}</div>
+            <div className="mt-2 text-xs text-black/50">2 pagos o menos por cubrir.</div>
           </CardBody>
         </Card>
       </div>
@@ -394,9 +371,7 @@ export default async function DashboardPage({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-black/55">
               Mostrando:{" "}
-              <span className="font-semibold text-[#1F1F1F]">
-                {windowLabel(cobrosWindow)}
-              </span>
+              <span className="font-semibold text-[#1F1F1F]">{windowLabel(cobrosWindow)}</span>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -422,37 +397,27 @@ export default async function DashboardPage({
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
               <div className="text-xs text-black/55">Cobros hoy</div>
-              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">
-                {countHoy}
-              </div>
+              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">{countHoy}</div>
               <div className="mt-1 text-xs text-black/55">
-                Total pendiente hoy:{" "}
-                <span className="font-semibold">{mxn(totalHoyPendiente)}</span>
+                Total pendiente hoy: <span className="font-semibold">{mxn(totalHoyPendiente)}</span>
               </div>
             </div>
 
             <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
               <div className="text-xs text-black/55">Total pendiente</div>
-              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">
-                {mxn(totalVentanaPendiente)}
-              </div>
-              <div className="mt-1 text-xs text-black/55">
-                En {windowLabel(cobrosWindow).toLowerCase()}.
-              </div>
+              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">{mxn(totalVentanaPendiente)}</div>
+              <div className="mt-1 text-xs text-black/55">En {windowLabel(cobrosWindow).toLowerCase()}.</div>
             </div>
 
             <div className="rounded-2xl border border-black/10 bg-white p-3">
               <div className="text-xs text-black/55">Tip</div>
-              <div className="mt-1 text-sm text-black/60">
-                Abre un cobro para registrar pago rápido.
-              </div>
+              <div className="mt-1 text-sm text-black/60">Abre un cobro para registrar pago rápido.</div>
             </div>
 
-            <div className="sm:col-span-3 rounded-2xl border border-black/10 bg-white p-3">
+            {/* LISTA */}
+            <div className="sm:col-span-3 min-w-0 overflow-x-hidden rounded-2xl border border-black/10 bg-white p-3">
               {upcoming.length === 0 ? (
-                <div className="text-sm text-black/55">
-                  No hay cobros en este rango.
-                </div>
+                <div className="text-sm text-black/55">No hay cobros en este rango.</div>
               ) : (
                 <div className="space-y-2">
                   {upcoming.map((x) => {
@@ -460,29 +425,31 @@ export default async function DashboardPage({
                     const paid = Number(x.paidAmount);
                     const pendiente = Math.max(0, expected - paid);
 
-                    const isToday =
-                      x.dueDate >= todayStart && x.dueDate < tomorrowStart;
+                    const isToday = x.dueDate >= todayStart && x.dueDate < tomorrowStart;
 
                     return (
                       <Link
                         key={x.id}
                         href={`/loans/${x.loanId}`}
-                        className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 hover:bg-black/5"
+                        className="flex min-w-0 items-start justify-between gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 hover:bg-black/5"
                       >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <div className="truncate text-sm font-semibold text-[#1F1F1F]">
-                              {x.loan.borrower.fullName}
+                        {/* IZQUIERDA */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-semibold text-[#1F1F1F]">
+                                {x.loan.borrower.fullName}
+                              </div>
                             </div>
 
                             {isToday ? (
-                              <span className="rounded-full border border-[#0F2A36]/20 bg-[#0F2A36]/10 px-2 py-0.5 text-xs font-semibold text-[#0F2A36]">
+                              <span className="shrink-0 rounded-full border border-[#0F2A36]/20 bg-[#0F2A36]/10 px-2 py-0.5 text-xs font-semibold text-[#0F2A36]">
                                 Hoy
                               </span>
                             ) : null}
 
                             <span
-                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClassScheduleLocal(
+                              className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badgeClassScheduleLocal(
                                 String(x.status)
                               )}`}
                             >
@@ -490,19 +457,18 @@ export default async function DashboardPage({
                             </span>
                           </div>
 
-                          <div className="mt-1 text-xs text-black/55">
+                          <div className="mt-1 truncate text-xs text-black/55">
                             Pago #{x.installmentNumber} · Vence:{" "}
                             {new Date(x.dueDate).toLocaleDateString("es-MX")}
                           </div>
                         </div>
 
-                        <div className="text-right">
+                        {/* DERECHA */}
+                        <div className="shrink-0 pl-3 text-right">
                           <div className="text-sm font-semibold text-[#0F2A36]">
                             {mxn(pendiente)}
                           </div>
-                          <div className="text-xs text-black/50">
-                            esperado: {mxn(expected)}
-                          </div>
+                          <div className="text-xs text-black/50">esperado: {mxn(expected)}</div>
                         </div>
                       </Link>
                     );
@@ -515,15 +481,10 @@ export default async function DashboardPage({
       </Card>
 
       <Card>
-        <CardHeader
-          title="Quién va más atrasado"
-          subtitle="Se actualiza cuando registras pagos."
-        />
+        <CardHeader title="Quién va más atrasado" subtitle="Se actualiza cuando registras pagos." />
         <CardBody>
           {topMorosos.length === 0 ? (
-            <div className="text-sm text-black/55">
-              Aún no hay métricas. Registra pagos y esto se llenará solo.
-            </div>
+            <div className="text-sm text-black/55">Aún no hay métricas. Registra pagos y esto se llenará solo.</div>
           ) : (
             <div className="space-y-2">
               {topMorosos.map((s) => (
@@ -531,18 +492,18 @@ export default async function DashboardPage({
                   key={s.id}
                   className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3"
                 >
-                  <div>
-                    <div className="text-sm font-semibold text-[#1F1F1F]">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-[#1F1F1F]">
                       {s.borrower?.fullName ?? "Deudor"}
                     </div>
-                    <div className="mt-1 text-xs text-black/55">
-                      Pagos tarde: {s.pagosTardePct}% · Atraso promedio:{" "}
-                      {s.atrasoPromedioDias} días · {trendLabel(String(s.trend))}
+                    <div className="mt-1 truncate text-xs text-black/55">
+                      Pagos tarde: {s.pagosTardePct}% · Atraso promedio: {s.atrasoPromedioDias} días ·{" "}
+                      {trendLabel(String(s.trend))}
                     </div>
                   </div>
 
                   <span
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(
+                    className={`shrink-0 inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClass(
                       String(s.conclusion)
                     )}`}
                   >
