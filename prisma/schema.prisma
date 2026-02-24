@@ -80,6 +80,16 @@ model Organization {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  // =========================
+  // Suscripción (Stripe)
+  // =========================
+  // Estados sugeridos: INACTIVE | ACTIVE | PAST_DUE | CANCELED
+  subscriptionStatus String   @default("INACTIVE")
+  stripeCustomerId   String?
+  stripeSubscriptionId String?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean  @default(false)
+
   users         User[]
   borrowers     Borrower[]
   loans         Loan[]
@@ -94,6 +104,7 @@ model Organization {
 
   @@index([deletedAt])
   @@index([slug])
+  @@index([subscriptionStatus])
 }
 
 model User {
@@ -105,6 +116,12 @@ model User {
   emailVerified DateTime?
   image         String?
   role          String    @default("MEMBER")
+
+  // =========================
+  // Admin override
+  // =========================
+  isEnabled  Boolean   @default(true)
+  disabledAt DateTime?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -120,6 +137,7 @@ model User {
   @@index([organizationId])
   @@index([deletedAt])
   @@index([organizationId, deletedAt])
+  @@index([isEnabled])
 }
 
 model Account {
