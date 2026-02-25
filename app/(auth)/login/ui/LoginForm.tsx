@@ -7,10 +7,19 @@ export default function LoginForm() {
   return (
     <div className="space-y-3">
       <button
+        type="button"
         onClick={() =>
-          signIn("google", {
-            callbackUrl: "/dashboard",
-          })
+          signIn(
+            "google",
+            { callbackUrl: "/dashboard" },
+            {
+              // CLAVE: obliga selector de cuenta y evita "prompt=none"
+              prompt: "select_account",
+
+              // Si en dev te sigue agarrando sesión rara, usa esto temporalmente:
+              // prompt: "consent select_account",
+            }
+          )
         }
         className="w-full rounded-xl bg-[#0F2A36] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0B1F28]"
       >

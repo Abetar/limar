@@ -84,11 +84,19 @@ model Organization {
   // Suscripción (Stripe)
   // =========================
   // Estados sugeridos: INACTIVE | ACTIVE | PAST_DUE | CANCELED
-  subscriptionStatus String   @default("INACTIVE")
-  stripeCustomerId   String?
-  stripeSubscriptionId String?
-  currentPeriodEnd   DateTime?
-  cancelAtPeriodEnd  Boolean  @default(false)
+  subscriptionStatus    String   @default("INACTIVE")
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean  @default(false)
+
+  // =========================
+  // Override manual (Admin)
+  // =========================
+  // Si esto está en true, el acceso se considera FULL aunque Stripe diga INACTIVE
+  subscriptionOverride       Boolean   @default(false)
+  subscriptionOverrideReason String?
+  subscriptionOverrideAt     DateTime?
 
   users         User[]
   borrowers     Borrower[]
@@ -105,6 +113,7 @@ model Organization {
   @@index([deletedAt])
   @@index([slug])
   @@index([subscriptionStatus])
+  @@index([subscriptionOverride])
 }
 
 model User {
