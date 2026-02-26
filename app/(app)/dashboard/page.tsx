@@ -149,7 +149,8 @@ function demoData(cobrosWindow: CobroWindow) {
   const todayStart = startOfDayInTZ(tz);
   const tomorrowStart = addDaysUTC(todayStart, 1);
 
-  const windowDays = cobrosWindow === "hoy" ? 1 : cobrosWindow === "7d" ? 7 : 30;
+  const windowDays =
+    cobrosWindow === "hoy" ? 1 : cobrosWindow === "7d" ? 7 : 30;
 
   // Totales demo (consistentes con la ventana)
   const totalHoyPendiente = 4_200;
@@ -160,13 +161,14 @@ function demoData(cobrosWindow: CobroWindow) {
     cobrosWindow === "hoy"
       ? totalHoyPendiente
       : cobrosWindow === "7d"
-        ? total7dPendiente
-        : total30dPendiente;
+      ? total7dPendiente
+      : total30dPendiente;
 
   const countHoy = 3;
 
   // Lista demo (sin links reales a préstamos)
-  const mkDue = (daysFromToday: number) => addDaysUTC(todayStart, Math.min(daysFromToday, windowDays - 1));
+  const mkDue = (daysFromToday: number) =>
+    addDaysUTC(todayStart, Math.min(daysFromToday, windowDays - 1));
 
   const upcoming = [
     {
@@ -230,7 +232,8 @@ function demoData(cobrosWindow: CobroWindow) {
       borrowerName: "Patricia V.",
     },
   ].filter((x) => {
-    const inWindow = x.dueDate >= todayStart && x.dueDate < addDaysUTC(todayStart, windowDays);
+    const inWindow =
+      x.dueDate >= todayStart && x.dueDate < addDaysUTC(todayStart, windowDays);
     return inWindow;
   });
 
@@ -302,9 +305,12 @@ export default async function DashboardPage({
         <div className="rounded-2xl border border-black/10 bg-white p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-[#1F1F1F]">Estás en modo exploración</div>
+              <div className="text-sm font-semibold text-[#1F1F1F]">
+                Estás en modo exploración
+              </div>
               <div className="mt-1 text-sm text-black/55">
-                Estos números son de ejemplo. Activa Limar para empezar a registrar tu cartera real.
+                Estos números son de ejemplo. Activa Limar para empezar a
+                registrar tu cartera real.
               </div>
             </div>
             <Link
@@ -319,7 +325,8 @@ export default async function DashboardPage({
         <div>
           <h1 className="text-xl font-semibold text-[#1F1F1F]">Resumen</h1>
           <p className="mt-1 text-sm text-black/55">
-            Lo más importante: cuánto está prestado, cuánto falta por cobrar y quién va atrasado.
+            Lo más importante: cuánto está prestado, cuánto falta por cobrar y
+            quién va atrasado.
           </p>
         </div>
 
@@ -327,37 +334,56 @@ export default async function DashboardPage({
           <Card>
             <CardBody>
               <div className="text-xs text-black/55">Prestado en la calle</div>
-              <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{mxn(demo.prestadoEnLaCalle)}</div>
-              <div className="mt-2 text-xs text-black/50">Suma de lo prestado en préstamos activos.</div>
+              <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
+                {mxn(demo.prestadoEnLaCalle)}
+              </div>
+              <div className="mt-2 text-xs text-black/50">
+                Suma de lo prestado en préstamos activos.
+              </div>
             </CardBody>
           </Card>
 
           <Card>
             <CardBody>
               <div className="text-xs text-black/55">Por cobrar (aprox.)</div>
-              <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{mxn(demo.porCobrarAprox)}</div>
-              <div className="mt-2 text-xs text-black/50">Total esperado menos lo ya pagado.</div>
+              <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
+                {mxn(demo.porCobrarAprox)}
+              </div>
+              <div className="mt-2 text-xs text-black/50">
+                Total esperado menos lo ya pagado.
+              </div>
             </CardBody>
           </Card>
 
           <Card>
             <CardBody>
               <div className="text-xs text-black/55">Pagos vencidos</div>
-              <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{demo.prestamosConVencidos}</div>
-              <div className="mt-2 text-xs text-black/50">Préstamos que ya traen pagos atrasados.</div>
+              <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
+                {demo.prestamosConVencidos}
+              </div>
+              <div className="mt-2 text-xs text-black/50">
+                Préstamos que ya traen pagos atrasados.
+              </div>
             </CardBody>
           </Card>
 
           <Card>
             <CardBody>
               <div className="text-xs text-black/55">Ya casi terminan</div>
-              <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{demo.yaCasiTerminan}</div>
-              <div className="mt-2 text-xs text-black/50">2 pagos o menos por cubrir.</div>
+              <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
+                {demo.yaCasiTerminan}
+              </div>
+              <div className="mt-2 text-xs text-black/50">
+                2 pagos o menos por cubrir.
+              </div>
             </CardBody>
           </Card>
         </div>
 
-        <DashboardCharts carteraEstado={demo.carteraEstado} frecuencias={demo.frecuencias} />
+        <DashboardCharts
+          carteraEstado={demo.carteraEstado}
+          frecuencias={demo.frecuencias}
+        />
 
         <Card>
           <CardHeader
@@ -368,7 +394,9 @@ export default async function DashboardPage({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-black/55">
                 Mostrando:{" "}
-                <span className="font-semibold text-[#1F1F1F]">{windowLabel(cobrosWindow)}</span>
+                <span className="font-semibold text-[#1F1F1F]">
+                  {windowLabel(cobrosWindow)}
+                </span>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -394,26 +422,39 @@ export default async function DashboardPage({
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
                 <div className="text-xs text-black/55">Cobros hoy</div>
-                <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">{demo.countHoy}</div>
+                <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">
+                  {demo.countHoy}
+                </div>
                 <div className="mt-1 text-xs text-black/55">
-                  Total pendiente hoy: <span className="font-semibold">{mxn(demo.totalHoyPendiente)}</span>
+                  Total pendiente hoy:{" "}
+                  <span className="font-semibold">
+                    {mxn(demo.totalHoyPendiente)}
+                  </span>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
                 <div className="text-xs text-black/55">Total pendiente</div>
-                <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">{mxn(demo.totalVentanaPendiente)}</div>
-                <div className="mt-1 text-xs text-black/55">En {windowLabel(cobrosWindow).toLowerCase()}.</div>
+                <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">
+                  {mxn(demo.totalVentanaPendiente)}
+                </div>
+                <div className="mt-1 text-xs text-black/55">
+                  En {windowLabel(cobrosWindow).toLowerCase()}.
+                </div>
               </div>
 
               <div className="rounded-2xl border border-black/10 bg-white p-3">
                 <div className="text-xs text-black/55">Tip</div>
-                <div className="mt-1 text-sm text-black/60">Abre un cobro para registrar pago rápido.</div>
+                <div className="mt-1 text-sm text-black/60">
+                  Abre un cobro para registrar pago rápido.
+                </div>
               </div>
 
               <div className="sm:col-span-3 min-w-0 overflow-x-hidden rounded-2xl border border-black/10 bg-white p-3">
                 {demo.upcoming.length === 0 ? (
-                  <div className="text-sm text-black/55">No hay cobros en este rango.</div>
+                  <div className="text-sm text-black/55">
+                    No hay cobros en este rango.
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {demo.upcoming.map((x) => {
@@ -421,7 +462,9 @@ export default async function DashboardPage({
                       const paid = Number(x.paidAmount);
                       const pendiente = Math.max(0, expected - paid);
 
-                      const isToday = x.dueDate >= demo.todayStart && x.dueDate < demo.tomorrowStart;
+                      const isToday =
+                        x.dueDate >= demo.todayStart &&
+                        x.dueDate < demo.tomorrowStart;
 
                       return (
                         <div
@@ -458,8 +501,12 @@ export default async function DashboardPage({
                           </div>
 
                           <div className="shrink-0 pl-3 text-right">
-                            <div className="text-sm font-semibold text-[#0F2A36]">{mxn(pendiente)}</div>
-                            <div className="text-xs text-black/50">esperado: {mxn(expected)}</div>
+                            <div className="text-sm font-semibold text-[#0F2A36]">
+                              {mxn(pendiente)}
+                            </div>
+                            <div className="text-xs text-black/50">
+                              esperado: {mxn(expected)}
+                            </div>
                           </div>
                         </div>
                       );
@@ -472,7 +519,10 @@ export default async function DashboardPage({
         </Card>
 
         <Card>
-          <CardHeader title="Quién va más atrasado" subtitle="Se actualiza cuando registras pagos." />
+          <CardHeader
+            title="Quién va más atrasado"
+            subtitle="Se actualiza cuando registras pagos."
+          />
           <CardBody>
             <div className="space-y-2">
               {demo.topMorosos.map((s) => (
@@ -481,10 +531,12 @@ export default async function DashboardPage({
                   className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3"
                 >
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-[#1F1F1F]">{s.borrowerName}</div>
+                    <div className="truncate text-sm font-semibold text-[#1F1F1F]">
+                      {s.borrowerName}
+                    </div>
                     <div className="mt-1 truncate text-xs text-black/55">
-                      Pagos tarde: {s.pagosTardePct}% · Atraso promedio: {s.atrasoPromedioDias} días ·{" "}
-                      {trendLabel(String(s.trend))}
+                      Pagos tarde: {s.pagosTardePct}% · Atraso promedio:{" "}
+                      {s.atrasoPromedioDias} días · {trendLabel(String(s.trend))}
                     </div>
                   </div>
 
@@ -511,7 +563,10 @@ export default async function DashboardPage({
     return (
       <div className="space-y-5">
         <Card>
-          <CardHeader title="Cuenta deshabilitada" subtitle="Tu acceso fue desactivado desde el panel de administración." />
+          <CardHeader
+            title="Cuenta deshabilitada"
+            subtitle="Tu acceso fue desactivado desde el panel de administración."
+          />
           <CardBody>
             <div className="text-sm text-black/60">
               Si crees que es un error, contacta al administrador.
@@ -543,10 +598,37 @@ export default async function DashboardPage({
     _sum: { amount: true },
   });
 
+  // ✅ NUEVO: total multas (manuales) capturadas en pagos
+  const paymentsForFees = await prisma.payment.findMany({
+    where: {
+      organizationId: orgId,
+      deletedAt: null,
+      status: "POSTED",
+      lateFeesCount: { gt: 0 },
+      loan: {
+        deletedAt: null,
+        status: "ACTIVE",
+      },
+    },
+    select: {
+      lateFeesCount: true,
+      loan: { select: { multaPorAtraso: true } },
+    },
+    take: 2000,
+  });
+
+  const totalMultas = paymentsForFees.reduce((acc, p) => {
+    const fee = Number(p.loan.multaPorAtraso ?? 0);
+    const count = Number(p.lateFeesCount ?? 0);
+    return acc + (fee > 0 ? fee * count : 0);
+  }, 0);
+
   const prestadoEnLaCalle = Number(carteraTotalAgg._sum.principalAmount ?? 0);
   const totalExpected = Number(totalExpectedAgg._sum.totalExpected ?? 0);
   const totalPagado = Number(paidAgg._sum.amount ?? 0);
-  const porCobrarAprox = Math.max(0, totalExpected - totalPagado);
+
+  // ✅ CAMBIO: Por cobrar incluye multas manuales capturadas
+  const porCobrarAprox = Math.max(0, totalExpected + totalMultas - totalPagado);
 
   const prestamosConVencidos = await prisma.loan.count({
     where: {
@@ -577,11 +659,16 @@ export default async function DashboardPage({
     take: 300,
   });
 
-  const yaCasiTerminan = loansActive.filter((l) => l.scheduleItems.length <= 2).length;
+  const yaCasiTerminan = loansActive.filter((l) => l.scheduleItems.length <= 2)
+    .length;
 
   const latestBorrowerSnap = await prisma.riskSnapshot.groupBy({
     by: ["borrowerId"],
-    where: { organizationId: orgId, scope: "BORROWER", borrowerId: { not: null } },
+    where: {
+      organizationId: orgId,
+      scope: "BORROWER",
+      borrowerId: { not: null },
+    },
     _max: { asOfDate: true },
   });
 
@@ -596,7 +683,10 @@ export default async function DashboardPage({
           where: {
             organizationId: orgId,
             scope: "BORROWER",
-            OR: pairs.map((p) => ({ borrowerId: p.borrowerId, asOfDate: p.asOfDate })),
+            OR: pairs.map((p) => ({
+              borrowerId: p.borrowerId,
+              asOfDate: p.asOfDate,
+            })),
           },
           orderBy: [{ pagosTardePct: "desc" }, { atrasoPromedioDias: "desc" }],
           take: 5,
@@ -636,7 +726,8 @@ export default async function DashboardPage({
   const todayStart = startOfDayInTZ(tz);
   const tomorrowStart = addDaysUTC(todayStart, 1);
 
-  const windowDays = cobrosWindow === "hoy" ? 1 : cobrosWindow === "7d" ? 7 : 30;
+  const windowDays =
+    cobrosWindow === "hoy" ? 1 : cobrosWindow === "7d" ? 7 : 30;
   const windowEnd = addDaysUTC(todayStart, windowDays);
 
   const upcoming = await prisma.paymentSchedule.findMany({
@@ -699,7 +790,8 @@ export default async function DashboardPage({
       <div>
         <h1 className="text-xl font-semibold text-[#1F1F1F]">Resumen</h1>
         <p className="mt-1 text-sm text-black/55">
-          Lo más importante: cuánto está prestado, cuánto falta por cobrar y quién va atrasado.
+          Lo más importante: cuánto está prestado, cuánto falta por cobrar y
+          quién va atrasado.
         </p>
       </div>
 
@@ -707,32 +799,48 @@ export default async function DashboardPage({
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Prestado en la calle</div>
-            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{mxn(prestadoEnLaCalle)}</div>
-            <div className="mt-2 text-xs text-black/50">Suma de lo prestado en préstamos activos.</div>
+            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
+              {mxn(prestadoEnLaCalle)}
+            </div>
+            <div className="mt-2 text-xs text-black/50">
+              Suma de lo prestado en préstamos activos.
+            </div>
           </CardBody>
         </Card>
 
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Por cobrar (aprox.)</div>
-            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{mxn(porCobrarAprox)}</div>
-            <div className="mt-2 text-xs text-black/50">Total esperado menos lo ya pagado.</div>
+            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
+              {mxn(porCobrarAprox)}
+            </div>
+            <div className="mt-2 text-xs text-black/50">
+              Total esperado + multas (manuales) - lo ya pagado.
+            </div>
           </CardBody>
         </Card>
 
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Pagos vencidos</div>
-            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{prestamosConVencidos}</div>
-            <div className="mt-2 text-xs text-black/50">Préstamos que ya traen pagos atrasados.</div>
+            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
+              {prestamosConVencidos}
+            </div>
+            <div className="mt-2 text-xs text-black/50">
+              Préstamos que ya traen pagos atrasados.
+            </div>
           </CardBody>
         </Card>
 
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Ya casi terminan</div>
-            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">{yaCasiTerminan}</div>
-            <div className="mt-2 text-xs text-black/50">2 pagos o menos por cubrir.</div>
+            <div className="mt-2 text-2xl font-semibold text-[#1F1F1F]">
+              {yaCasiTerminan}
+            </div>
+            <div className="mt-2 text-xs text-black/50">
+              2 pagos o menos por cubrir.
+            </div>
           </CardBody>
         </Card>
       </div>
@@ -740,11 +848,17 @@ export default async function DashboardPage({
       <DashboardCharts carteraEstado={carteraEstado} frecuencias={frecuencias} />
 
       <Card>
-        <CardHeader title="Próximos cobros" subtitle="Incluye los que se cobran hoy. Usa tu horario de México." />
+        <CardHeader
+          title="Próximos cobros"
+          subtitle="Incluye los que se cobran hoy. Usa tu horario de México."
+        />
         <CardBody>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-black/55">
-              Mostrando: <span className="font-semibold text-[#1F1F1F]">{windowLabel(cobrosWindow)}</span>
+              Mostrando:{" "}
+              <span className="font-semibold text-[#1F1F1F]">
+                {windowLabel(cobrosWindow)}
+              </span>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -770,26 +884,37 @@ export default async function DashboardPage({
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
               <div className="text-xs text-black/55">Cobros hoy</div>
-              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">{countHoy}</div>
+              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">
+                {countHoy}
+              </div>
               <div className="mt-1 text-xs text-black/55">
-                Total pendiente hoy: <span className="font-semibold">{mxn(totalHoyPendiente)}</span>
+                Total pendiente hoy:{" "}
+                <span className="font-semibold">{mxn(totalHoyPendiente)}</span>
               </div>
             </div>
 
             <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
               <div className="text-xs text-black/55">Total pendiente</div>
-              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">{mxn(totalVentanaPendiente)}</div>
-              <div className="mt-1 text-xs text-black/55">En {windowLabel(cobrosWindow).toLowerCase()}.</div>
+              <div className="mt-1 text-2xl font-semibold text-[#1F1F1F]">
+                {mxn(totalVentanaPendiente)}
+              </div>
+              <div className="mt-1 text-xs text-black/55">
+                En {windowLabel(cobrosWindow).toLowerCase()}.
+              </div>
             </div>
 
             <div className="rounded-2xl border border-black/10 bg-white p-3">
               <div className="text-xs text-black/55">Tip</div>
-              <div className="mt-1 text-sm text-black/60">Abre un cobro para registrar pago rápido.</div>
+              <div className="mt-1 text-sm text-black/60">
+                Abre un cobro para registrar pago rápido.
+              </div>
             </div>
 
             <div className="sm:col-span-3 min-w-0 overflow-x-hidden rounded-2xl border border-black/10 bg-white p-3">
               {upcoming.length === 0 ? (
-                <div className="text-sm text-black/55">No hay cobros en este rango.</div>
+                <div className="text-sm text-black/55">
+                  No hay cobros en este rango.
+                </div>
               ) : (
                 <div className="space-y-2">
                   {upcoming.map((x) => {
@@ -797,7 +922,8 @@ export default async function DashboardPage({
                     const paid = Number(x.paidAmount);
                     const pendiente = Math.max(0, expected - paid);
 
-                    const isToday = x.dueDate >= todayStart && x.dueDate < tomorrowStart;
+                    const isToday =
+                      x.dueDate >= todayStart && x.dueDate < tomorrowStart;
 
                     return (
                       <Link
@@ -835,8 +961,12 @@ export default async function DashboardPage({
                         </div>
 
                         <div className="shrink-0 pl-3 text-right">
-                          <div className="text-sm font-semibold text-[#0F2A36]">{mxn(pendiente)}</div>
-                          <div className="text-xs text-black/50">esperado: {mxn(expected)}</div>
+                          <div className="text-sm font-semibold text-[#0F2A36]">
+                            {mxn(pendiente)}
+                          </div>
+                          <div className="text-xs text-black/50">
+                            esperado: {mxn(expected)}
+                          </div>
                         </div>
                       </Link>
                     );
@@ -849,10 +979,15 @@ export default async function DashboardPage({
       </Card>
 
       <Card>
-        <CardHeader title="Quién va más atrasado" subtitle="Se actualiza cuando registras pagos." />
+        <CardHeader
+          title="Quién va más atrasado"
+          subtitle="Se actualiza cuando registras pagos."
+        />
         <CardBody>
           {topMorosos.length === 0 ? (
-            <div className="text-sm text-black/55">Aún no hay métricas. Registra pagos y esto se llenará solo.</div>
+            <div className="text-sm text-black/55">
+              Aún no hay métricas. Registra pagos y esto se llenará solo.
+            </div>
           ) : (
             <div className="space-y-2">
               {topMorosos.map((s) => (
@@ -865,8 +1000,8 @@ export default async function DashboardPage({
                       {s.borrower?.fullName ?? "Deudor"}
                     </div>
                     <div className="mt-1 truncate text-xs text-black/55">
-                      Pagos tarde: {s.pagosTardePct}% · Atraso promedio: {s.atrasoPromedioDias} días ·{" "}
-                      {trendLabel(String(s.trend))}
+                      Pagos tarde: {s.pagosTardePct}% · Atraso promedio:{" "}
+                      {s.atrasoPromedioDias} días · {trendLabel(String(s.trend))}
                     </div>
                   </div>
 

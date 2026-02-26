@@ -33,6 +33,7 @@ export default function LoanWizard({
   const [termCount, setTermCount] = useState(13);
   const [principal, setPrincipal] = useState(3000);
   const [interestTotalPct, setInterestTotalPct] = useState(30);
+  const [multaPorAtraso, setMultaPorAtraso] = useState(50);
 
   const preview = useMemo(() => {
     if (!borrowerId || !startDate || termCount < 1 || principal <= 0) return null;
@@ -50,21 +51,24 @@ export default function LoanWizard({
 
   return (
     <div className="space-y-4">
+
       <div>
-        <h1 className="text-xl font-semibold text-[#1F1F1F]">Dar nuevo préstamo</h1>
+        <h1 className="text-xl font-semibold text-[#1F1F1F]">
+          Dar nuevo préstamo
+        </h1>
         <p className="mt-1 text-sm text-black/55">
           Define el préstamo y revisa el calendario antes de guardarlo.
         </p>
       </div>
 
+      {/* Deudor */}
       <Card>
         <CardHeader title="1) ¿A quién le prestas?" />
         <CardBody>
-          <label className="block text-sm font-medium text-[#1F1F1F]">Deudor</label>
           <select
             value={borrowerId}
             onChange={(e) => setBorrowerId(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0F2A36]/60 focus:ring-2 focus:ring-[#0F2A36]/10"
+            className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2.5 text-sm"
           >
             {borrowers.map((b) => (
               <option key={b.id} value={b.id}>
@@ -72,71 +76,31 @@ export default function LoanWizard({
               </option>
             ))}
           </select>
-          <p className="mt-2 text-xs text-black/50">
-            Si el deudor no aparece, primero agrégalo en “Deudores”.
-          </p>
         </CardBody>
       </Card>
 
+      {/* Condiciones */}
       <Card>
-        <CardHeader title="2) ¿Cuánto y cómo lo vas a cobrar?" />
+        <CardHeader title="2) Condiciones del préstamo" />
         <CardBody>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-[#1F1F1F]">Fecha de inicio</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0F2A36]/60 focus:ring-2 focus:ring-[#0F2A36]/10"
-              />
-            </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1F1F1F]">Cada cuándo paga</label>
-              <select
-                value={frequency}
-                onChange={(e) => setFrequency(e.target.value as LoanFrequency)}
-                className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0F2A36]/60 focus:ring-2 focus:ring-[#0F2A36]/10"
-              >
-                <option value="WEEKLY">Semanal</option>
-                <option value="BIWEEKLY">Quincenal</option>
-                <option value="MONTHLY">Mensual</option>
-              </select>
-              <p className="mt-2 text-xs text-black/50">
-                Seleccionado: {frequencyLabel(String(frequency))}
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#1F1F1F]">Número de pagos</label>
-              <input
-                type="number"
-                min={1}
-                max={200}
-                value={termCount}
-                onChange={(e) => setTermCount(Number(e.target.value))}
-                className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0F2A36]/60 focus:ring-2 focus:ring-[#0F2A36]/10"
-              />
-              <p className="mt-2 text-xs text-black/50">
-                Ejemplo: 13 pagos semanales = 13 semanas.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#1F1F1F]">¿Cuánto le prestas? (MXN)</label>
+              <label className="block text-sm font-medium text-[#1F1F1F]">
+                Capital (MXN)
+              </label>
               <input
                 type="number"
                 min={1}
                 value={principal}
                 onChange={(e) => setPrincipal(Number(e.target.value))}
-                className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0F2A36]/60 focus:ring-2 focus:ring-[#0F2A36]/10"
+                className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2.5 text-sm"
               />
             </div>
 
-            <div className="sm:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-[#1F1F1F]">
-                ¿Cuánto ganas en total? (%)
+                Interés total (%)
               </label>
               <input
                 type="number"
@@ -145,42 +109,65 @@ export default function LoanWizard({
                 step="0.01"
                 value={interestTotalPct}
                 onChange={(e) => setInterestTotalPct(Number(e.target.value))}
-                className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0F2A36]/60 focus:ring-2 focus:ring-[#0F2A36]/10"
+                className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2.5 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#1F1F1F]">
+                Multa por atraso (MXN)
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={multaPorAtraso}
+                onChange={(e) => setMultaPorAtraso(Number(e.target.value))}
+                className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2.5 text-sm"
               />
               <p className="mt-2 text-xs text-black/50">
-                Ejemplo: 30% significa que si prestas {moneyLabel(principal)}, vas a cobrar {moneyLabel(principal * 1.3)} en total (aprox.).
+                Se cobrará esta cantidad cada vez que registres una multa.
               </p>
             </div>
+
           </div>
         </CardBody>
       </Card>
 
+      {/* Preview Calendario */}
       <Card>
         <CardHeader
           title="3) Así quedaría el calendario"
-          subtitle="Esto es un preview. Al guardar se recalcula igual en el servidor."
+          subtitle="Esto es un preview. El servidor recalcula igual al guardar."
         />
         <CardBody>
           {!preview ? (
-            <div className="text-sm text-black/55">Completa los datos para ver el calendario.</div>
+            <div className="text-sm text-black/55">
+              Completa los datos para ver el calendario.
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
+
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
                   <div className="text-xs text-black/55">Cuota</div>
-                  <div className="mt-1 text-sm font-semibold text-[#1F1F1F]">
+                  <div className="mt-1 font-semibold">
                     {moneyLabel(preview.expectedInstallment)}
                   </div>
                 </div>
+
                 <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
                   <div className="text-xs text-black/55">Total a cobrar</div>
-                  <div className="mt-1 text-sm font-semibold text-[#1F1F1F]">
+                  <div className="mt-1 font-semibold">
                     {moneyLabel(preview.totalExpected)}
                   </div>
                 </div>
+
                 <div className="rounded-2xl border border-black/10 bg-[#D6CBBF]/20 p-3">
-                  <div className="text-xs text-black/55">Pagos</div>
-                  <div className="mt-1 text-sm font-semibold text-[#1F1F1F]">{termCount}</div>
+                  <div className="text-xs text-black/55">Multa definida</div>
+                  <div className="mt-1 font-semibold">
+                    {moneyLabel(multaPorAtraso)}
+                  </div>
                 </div>
               </div>
 
@@ -189,7 +176,7 @@ export default function LoanWizard({
                   <thead>
                     <tr className="text-left text-black/55">
                       <th className="py-2">#</th>
-                      <th className="py-2">Fecha de pago</th>
+                      <th className="py-2">Fecha</th>
                       <th className="py-2">Monto</th>
                     </tr>
                   </thead>
@@ -197,18 +184,23 @@ export default function LoanWizard({
                     {preview.dueDates.slice(0, 12).map((d, idx) => (
                       <tr key={idx} className="border-t border-black/10">
                         <td className="py-2">{idx + 1}</td>
-                        <td className="py-2">{d.toLocaleDateString("es-MX")}</td>
-                        <td className="py-2">{moneyLabel(preview.expectedInstallment)}</td>
+                        <td className="py-2">
+                          {d.toLocaleDateString("es-MX")}
+                        </td>
+                        <td className="py-2">
+                          {moneyLabel(preview.expectedInstallment)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                {termCount > 12 ? (
+                {termCount > 12 && (
                   <div className="mt-2 text-xs text-black/50">
                     Mostrando 12 de {termCount} pagos.
                   </div>
-                ) : null}
+                )}
               </div>
+
             </div>
           )}
         </CardBody>
@@ -221,17 +213,13 @@ export default function LoanWizard({
         <input type="hidden" name="termCount" value={String(termCount)} />
         <input type="hidden" name="principalAmount" value={String(principal)} />
         <input type="hidden" name="interestTotalPct" value={String(interestTotalPct)} />
+        <input type="hidden" name="multaPorAtraso" value={String(multaPorAtraso)} />
 
-        <button className="rounded-xl bg-[#0F2A36] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0B1F28]">
+        <button className="rounded-xl bg-[#0F2A36] px-4 py-2.5 text-sm font-semibold text-white">
           Crear préstamo
         </button>
-        <a
-          href="/loans"
-          className="rounded-xl border border-[#0F2A36] bg-white px-4 py-2.5 text-sm font-semibold text-[#0F2A36] hover:bg-black/5"
-        >
-          Cancelar
-        </a>
       </form>
+
     </div>
   );
 }

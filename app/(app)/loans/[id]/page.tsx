@@ -63,7 +63,12 @@ export default async function LoanDetailPage({
       },
       payments: {
         where: { deletedAt: null, status: "POSTED" },
-        select: { id: true, amount: true, paidAt: true },
+        select: {
+          id: true,
+          amount: true,
+          paidAt: true,
+          lateFeesCount: true, // ✅ para multas manuales
+        },
         orderBy: { paidAt: "desc" },
         take: 10,
       },
@@ -97,11 +102,22 @@ export default async function LoanDetailPage({
   const cuota = Number(loan.expectedInstallment);
   const totalExpected = Number(loan.totalExpected);
 
+  // ✅ Multa configurada en el préstamo (manual, no por fecha)
+  const multaPorAtraso = Number((loan as any).multaPorAtraso ?? 0);
+
+  // ✅ Pagos + multas manuales (capturadas por el usuario)
   const totalPaid = loan.payments.reduce((acc, p) => acc + Number(p.amount), 0);
-  const remainingEst = Math.max(0, totalExpected - totalPaid);
+  const totalMultasCount = loan.payments.reduce(
+    (acc, p) => acc + Number((p as any).lateFeesCount ?? 0),
+    0
+  );
+  const totalMultas = multaPorAtraso > 0 ? totalMultasCount * multaPorAtraso : 0;
+
+  // ✅ Total esperado + multas acumuladas (no reemplaza interés, solo suma)
+  const totalConMultas = totalExpected + totalMultas;
+  const remainingEst = Math.max(0, totalConMultas - totalPaid);
 
   const canDelete = true;
-
   const pdfHref = `/api/loans/${loan.id}/contract`;
 
   return (
@@ -124,7 +140,6 @@ export default async function LoanDetailPage({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {/* ✅ Descargar contrato PDF (server route) */}
           <a
             href={pdfHref}
             className="inline-flex items-center rounded-xl border border-[#0F2A36] bg-white px-4 py-2 text-sm font-semibold text-[#0F2A36] hover:bg-black/5"
@@ -152,6 +167,7 @@ export default async function LoanDetailPage({
             </div>
           </CardBody>
         </Card>
+
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Cuota</div>
@@ -160,6 +176,7 @@ export default async function LoanDetailPage({
             </div>
           </CardBody>
         </Card>
+
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Total esperado</div>
@@ -168,12 +185,21 @@ export default async function LoanDetailPage({
             </div>
           </CardBody>
         </Card>
+
         <Card>
           <CardBody>
             <div className="text-xs text-black/55">Falta (aprox.)</div>
             <div className="mt-1 text-lg font-semibold text-[#1F1F1F]">
               {moneyLabel(remainingEst)}
             </div>
+            {multaPorAtraso > 0 ? (
+              <div className="mt-1 text-xs text-black/55">
+                Incluye multas: {moneyLabel(totalMultas)} ({totalMultasCount} atraso(s) ×{" "}
+                {moneyLabel(multaPorAtraso)})
+              </div>
+            ) : (
+              <div className="mt-1 text-xs text-black/55">Sin multas configuradas.</div>
+            )}
           </CardBody>
         </Card>
       </div>
@@ -185,7 +211,7 @@ export default async function LoanDetailPage({
           subtitle="Se aplica a los pagos más viejos primero (FIFO)."
         />
         <CardBody>
-          <form action={registerPaymentAction} className="grid gap-3 sm:grid-cols-4">
+          <form action={registerPaymentAction} className="grid gap-3 sm:grid-cols-6">
             <input type="hidden" name="loanId" value={loan.id} />
 
             <div className="sm:col-span-2">
@@ -200,7 +226,7 @@ export default async function LoanDetailPage({
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-[#1F1F1F]">
                 Monto
               </label>
@@ -214,9 +240,28 @@ export default async function LoanDetailPage({
               />
             </div>
 
-            <div className="flex items-end">
+            {/* ✅ Multas manuales: no se calculan por fecha */}
+            <div className="sm:col-span-1">
+              <label className="block text-sm font-medium text-[#1F1F1F]">
+                Multas
+              </label>
+              <input
+                type="number"
+                name="lateFeesCount"
+                min={0}
+                step={1}
+                defaultValue={0}
+                disabled={!(multaPorAtraso > 0)}
+                className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none disabled:bg-black/5"
+              />
+              <div className="mt-1 text-xs text-black/50">
+                {multaPorAtraso > 0 ? `× ${moneyLabel(multaPorAtraso)}` : "Configura multa en el préstamo"}
+              </div>
+            </div>
+
+            <div className="sm:col-span-1 flex items-end">
               <button className="w-full rounded-xl bg-[#0F2A36] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0B1F28]">
-                Registrar pago
+                Registrar
               </button>
             </div>
           </form>
@@ -225,7 +270,10 @@ export default async function LoanDetailPage({
 
       {/* Calendario */}
       <Card>
-        <CardHeader title="Pagos del calendario" subtitle="Pagado, abonado, pendiente o vencido." />
+        <CardHeader
+          title="Pagos del calendario"
+          subtitle="Pagado, abonado, pendiente o vencido."
+        />
         <CardBody>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -268,7 +316,58 @@ export default async function LoanDetailPage({
         </CardBody>
       </Card>
 
-      {/* Snapshot */}
+      {/* Historial de pagos */}
+      <Card>
+        <CardHeader title="Pagos registrados" subtitle="Últimos movimientos del préstamo." />
+        <CardBody>
+          {loan.payments.length === 0 ? (
+            <div className="text-sm text-black/55">Aún no hay pagos registrados.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-black/55">
+                    <th className="py-2">Fecha</th>
+                    <th className="py-2">Monto</th>
+                    <th className="py-2">Multas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loan.payments.map((p) => {
+                    const c = Number((p as any).lateFeesCount ?? 0);
+                    const fees = multaPorAtraso > 0 ? c * multaPorAtraso : 0;
+
+                    return (
+                      <tr key={p.id} className="border-t border-black/10">
+                        <td className="py-2">{fmtDate(p.paidAt)}</td>
+                        <td className="py-2">{moneyLabel(Number(p.amount))}</td>
+                        <td className="py-2">
+                          {multaPorAtraso > 0 ? (
+                            c > 0 ? (
+                              <span className="text-black/70">
+                                {c} × {moneyLabel(multaPorAtraso)} ={" "}
+                                <span className="font-semibold text-[#1F1F1F]">
+                                  {moneyLabel(fees)}
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="text-black/50">0</span>
+                            )
+                          ) : (
+                            <span className="text-black/50">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Snapshot (RESTAURADO COMPLETO) */}
       <Card>
         <CardHeader
           title="Recomendación (para renovar)"

@@ -22,16 +22,24 @@ function daysBetween(a: Date, b: Date) {
   return Math.floor(ms / (1000 * 60 * 60 * 24));
 }
 
+/* =========================================================
+   REGISTRAR PAGO
+========================================================= */
 export async function registerPaymentAction(formData: FormData) {
   const orgId = await requireOrgId();
 
   const loanId = s(formData, "loanId");
-  const paidAtStr = s(formData, "paidAt"); // yyyy-mm-dd
+  const paidAtStr = s(formData, "paidAt");
   const amount = toNumber(s(formData, "amount"));
+
+  // NUEVO: número de multas aplicadas en este pago
+  const lateFeesCountStr = s(formData, "lateFeesCount");
+  const lateFeesCount = lateFeesCountStr ? toNumber(lateFeesCountStr) : 0;
 
   if (!loanId) throw new Error("loanId requerido");
   if (!paidAtStr) throw new Error("paidAt requerido");
   if (amount <= 0) throw new Error("amount inválido");
+  if (lateFeesCount < 0) throw new Error("lateFeesCount inválido");
 
   const paidAt = new Date(`${paidAtStr}T00:00:00.000Z`);
   const today = new Date();
@@ -42,8 +50,10 @@ export async function registerPaymentAction(formData: FormData) {
       where: { id: loanId, organizationId: orgId, deletedAt: null },
       select: { id: true, borrowerId: true },
     });
+
     if (!loan) throw new Error("Loan no encontrado");
 
+    // Marcar vencidos automáticamente
     await tx.paymentSchedule.updateMany({
       where: {
         organizationId: orgId,
@@ -60,13 +70,20 @@ export async function registerPaymentAction(formData: FormData) {
         organizationId: orgId,
         loanId,
         deletedAt: null,
-        status: { in: [ScheduleStatus.PENDING, ScheduleStatus.PARTIAL, ScheduleStatus.MISSED] },
+        status: {
+          in: [
+            ScheduleStatus.PENDING,
+            ScheduleStatus.PARTIAL,
+            ScheduleStatus.MISSED,
+          ],
+        },
       },
       orderBy: { installmentNumber: "asc" },
     });
 
     let remaining = amount;
 
+    // Crear registro de pago
     await tx.payment.create({
       data: {
         organizationId: orgId,
@@ -75,9 +92,11 @@ export async function registerPaymentAction(formData: FormData) {
         paidAt,
         amount: new Prisma.Decimal(amount.toFixed(2)),
         status: PaymentStatus.POSTED,
+        lateFeesCount, // 🔥 MULTAS APLICADAS EN ESTE PAGO
       },
     });
 
+    // Aplicar pago FIFO
     for (const item of schedules) {
       if (remaining <= 0) break;
 
@@ -90,13 +109,17 @@ export async function registerPaymentAction(formData: FormData) {
       const newPaid = paidSoFar + applied;
       const fullyPaid = newPaid >= expected - 0.0001;
 
-      const lateDays = fullyPaid ? Math.max(0, daysBetween(paidAt, item.dueDate)) : item.lateDays;
+      const lateDays = fullyPaid
+        ? Math.max(0, daysBetween(paidAt, item.dueDate))
+        : item.lateDays;
 
       await tx.paymentSchedule.update({
         where: { id: item.id },
         data: {
           paidAmount: new Prisma.Decimal(newPaid.toFixed(2)),
-          status: fullyPaid ? ScheduleStatus.PAID : ScheduleStatus.PARTIAL,
+          status: fullyPaid
+            ? ScheduleStatus.PAID
+            : ScheduleStatus.PARTIAL,
           paidAt: fullyPaid ? paidAt : item.paidAt,
           lateDays: fullyPaid ? lateDays : item.lateDays,
         },
@@ -105,12 +128,19 @@ export async function registerPaymentAction(formData: FormData) {
       remaining -= applied;
     }
 
+    // Actualizar siguiente fecha
     const nextPending = await tx.paymentSchedule.findFirst({
       where: {
         organizationId: orgId,
         loanId,
         deletedAt: null,
-        status: { in: [ScheduleStatus.PENDING, ScheduleStatus.PARTIAL, ScheduleStatus.MISSED] },
+        status: {
+          in: [
+            ScheduleStatus.PENDING,
+            ScheduleStatus.PARTIAL,
+            ScheduleStatus.MISSED,
+          ],
+        },
       },
       orderBy: { dueDate: "asc" },
       select: { dueDate: true },
@@ -130,13 +160,13 @@ export async function registerPaymentAction(formData: FormData) {
   redirect(`/loans/${loanId}`);
 }
 
-/**
- * ✅ BORRADO FORZADO (soft delete) del préstamo + todo lo colgado.
- * Esto permite borrar aunque tenga pagos.
- */
+/* =========================================================
+   BORRAR PRÉSTAMO (SOFT DELETE COMPLETO)
+========================================================= */
 export async function deleteLoanAction(formData: FormData) {
   const orgId = await requireOrgId();
   const loanId = s(formData, "loanId");
+
   if (!loanId) throw new Error("loanId requerido");
 
   const now = new Date();
@@ -146,9 +176,10 @@ export async function deleteLoanAction(formData: FormData) {
       where: { id: loanId, organizationId: orgId, deletedAt: null },
       select: { id: true, borrowerId: true },
     });
+
     if (!loan) throw new Error("Loan no encontrado");
 
-    // 1) Soft-delete dependencias
+    // Soft delete dependencias
     await tx.payment.updateMany({
       where: { organizationId: orgId, loanId, deletedAt: null },
       data: { deletedAt: now, updatedAt: now },
@@ -169,19 +200,12 @@ export async function deleteLoanAction(formData: FormData) {
       data: { deletedAt: now, updatedAt: now },
     });
 
-    // snapshots LOAN ligados a este loan
-    await tx.riskSnapshot.updateMany({
-      where: { organizationId: orgId, scope: "LOAN", loanId },
-      data: { /* RiskSnapshot no tiene updatedAt */ },
-    });
-
-    // Contract docs
     await tx.contractDocument.updateMany({
       where: { organizationId: orgId, loanId, deletedAt: null },
       data: { deletedAt: now, updatedAt: now },
     });
 
-    // 2) Soft-delete del loan
+    // Soft delete loan
     await tx.loan.update({
       where: { id: loanId },
       data: { deletedAt: now, updatedAt: now },
@@ -190,7 +214,6 @@ export async function deleteLoanAction(formData: FormData) {
     return loan.borrowerId;
   });
 
-  // Recalcular borrower snapshot por si afectaba su lectura
   await recalcBorrowerSnapshot(orgId, borrowerId);
 
   redirect(`/borrowers/${borrowerId}`);

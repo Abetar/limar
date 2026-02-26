@@ -3,7 +3,12 @@
 import { prisma } from "@/lib/prisma";
 import { requireOrgId } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Prisma, LoanStatus, ScheduleStatus, type LoanFrequency } from "@prisma/client";
+import {
+  Prisma,
+  LoanStatus,
+  ScheduleStatus,
+  type LoanFrequency,
+} from "@prisma/client";
 import { computeDueDates, computeInstallment } from "@/lib/schedule";
 
 function s(fd: FormData, key: string) {
@@ -27,15 +32,26 @@ export async function createLoanAction(formData: FormData) {
   const termCount = toNumber(s(formData, "termCount"));
   const principal = toNumber(s(formData, "principalAmount"));
 
-  // ✅ Ahora es interés TOTAL del préstamo (%)
+  // ✅ Interés TOTAL del préstamo (%)
   const interestTotalPct = toNumber(s(formData, "interestTotalPct"));
+
+  // ✅ NUEVO: Multa fija por evento de atraso
+  const multaPorAtrasoStr = s(formData, "multaPorAtraso");
+  const multaPorAtraso = multaPorAtrasoStr
+    ? toNumber(multaPorAtrasoStr)
+    : 0;
 
   if (!borrowerId) throw new Error("borrowerId requerido");
   if (!startDateStr) throw new Error("startDate requerido");
-  if (!["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(frequency)) throw new Error("frecuencia inválida");
-  if (termCount < 1 || termCount > 200) throw new Error("termCount inválido");
+  if (!["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(frequency))
+    throw new Error("frecuencia inválida");
+  if (termCount < 1 || termCount > 200)
+    throw new Error("termCount inválido");
   if (principal <= 0) throw new Error("principal inválido");
-  if (interestTotalPct < 0 || interestTotalPct > 300) throw new Error("interestTotalPct inválido");
+  if (interestTotalPct < 0 || interestTotalPct > 300)
+    throw new Error("interestTotalPct inválido");
+  if (multaPorAtraso < 0)
+    throw new Error("multaPorAtraso inválida");
 
   // Asegura que borrower pertenece a la org
   const borrower = await prisma.borrower.findFirst({
@@ -44,10 +60,10 @@ export async function createLoanAction(formData: FormData) {
   });
   if (!borrower) throw new Error("Borrower no encontrado");
 
-  // Parse fecha (sin hora). MVP: lo guardamos en UTC a medianoche.
+  // Fecha en UTC a medianoche
   const startDate = new Date(`${startDateStr}T00:00:00.000Z`);
 
-  // ✅ Calcula totalExpected + cuota usando interés TOTAL
+  // Calcula totalExpected + cuota usando interés TOTAL
   const { totalExpected, expectedInstallment } = computeInstallment(
     principal,
     interestTotalPct,
@@ -66,14 +82,17 @@ export async function createLoanAction(formData: FormData) {
       frequency,
       termCount,
       principalAmount: new Prisma.Decimal(principal.toFixed(2)),
-
-      // ⚠️ Por ahora guardamos el TOTAL en este campo (nombre legacy).
-      // Luego podemos renombrar o agregar interestTotalPct a la DB.
       interestRatePct: new Prisma.Decimal(interestTotalPct.toFixed(2)),
-
-      expectedInstallment: new Prisma.Decimal(expectedInstallment.toFixed(2)),
+      expectedInstallment: new Prisma.Decimal(
+        expectedInstallment.toFixed(2)
+      ),
       totalExpected: new Prisma.Decimal(totalExpected.toFixed(2)),
       nextDueDate,
+
+      // ✅ NUEVO CAMPO
+      multaPorAtraso: new Prisma.Decimal(
+        multaPorAtraso.toFixed(2)
+      ),
     },
     select: { id: true },
   });
@@ -84,7 +103,9 @@ export async function createLoanAction(formData: FormData) {
       loanId: loan.id,
       installmentNumber: idx + 1,
       dueDate,
-      expectedAmount: new Prisma.Decimal(expectedInstallment.toFixed(2)),
+      expectedAmount: new Prisma.Decimal(
+        expectedInstallment.toFixed(2)
+      ),
       status: ScheduleStatus.PENDING,
       paidAmount: new Prisma.Decimal("0.00"),
     })),
