@@ -1,15 +1,10 @@
 // app/(app)/layout.tsx
 import Link from "next/link";
+import Image from "next/image";
 import LogoutButton from "@/components/ui/LogoutButton";
 import { requireAccess } from "@/lib/access";
 
-function NavItem({
-  href,
-  label,
-}: {
-  href: string;
-  label: string;
-}) {
+function NavItem({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
@@ -38,8 +33,19 @@ export default async function AppLayout({
       <header className="sticky top-0 z-20 border-b border-black/10 bg-[#0F2A36]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-white font-semibold tracking-tight">
-              Limar
+            {/* Logo + marca */}
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg bg-white/10">
+                <Image
+                  src="/logo.png"
+                  alt="Limar"
+                  fill
+                  priority
+                  sizes="32px"
+                  className="object-contain"
+                />
+              </span>
+              <span className="text-white font-semibold tracking-tight">Limar</span>
             </Link>
 
             <nav className="hidden sm:flex items-center gap-1">
