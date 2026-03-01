@@ -381,7 +381,7 @@ export default async function SettingsPage({
           </CardBody>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader
             title="Multas (opcional)"
             subtitle="MVP: ya están guardadas, aún no las usamos en cálculos."
@@ -431,7 +431,7 @@ export default async function SettingsPage({
               </div>
             </div>
           </CardBody>
-        </Card>
+        </Card> */}
 
         <div className="flex gap-2">
           <button className="rounded-xl bg-[#0F2A36] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0B1F28]">
