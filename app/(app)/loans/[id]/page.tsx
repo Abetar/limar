@@ -83,7 +83,9 @@ export default async function LoanDetailPage({
   if (!loan) {
     return (
       <div className="rounded-2xl border border-black/10 bg-white p-6">
-        <div className="text-sm font-semibold text-[#1F1F1F]">No encontrado</div>
+        <div className="text-sm font-semibold text-[#1F1F1F]">
+          No encontrado
+        </div>
         <div className="mt-1 text-sm text-black/55">
           Este préstamo no existe (o no es de tu cuenta).
         </div>
@@ -109,9 +111,10 @@ export default async function LoanDetailPage({
   const totalPaid = loan.payments.reduce((acc, p) => acc + Number(p.amount), 0);
   const totalMultasCount = loan.payments.reduce(
     (acc, p) => acc + Number((p as any).lateFeesCount ?? 0),
-    0
+    0,
   );
-  const totalMultas = multaPorAtraso > 0 ? totalMultasCount * multaPorAtraso : 0;
+  const totalMultas =
+    multaPorAtraso > 0 ? totalMultasCount * multaPorAtraso : 0;
 
   // ✅ Total esperado + multas acumuladas (no reemplaza interés, solo suma)
   const totalConMultas = totalExpected + totalMultas;
@@ -145,6 +148,13 @@ export default async function LoanDetailPage({
             className="inline-flex items-center rounded-xl border border-[#0F2A36] bg-white px-4 py-2 text-sm font-semibold text-[#0F2A36] hover:bg-black/5"
           >
             Descargar contrato (PDF)
+          </a>
+
+          <a
+            href={`/api/loans/${loan.id}/pagare`}
+            className="inline-flex items-center rounded-xl border border-[#0F2A36] bg-white px-4 py-2 text-sm font-semibold text-[#0F2A36] hover:bg-black/5"
+          >
+            Descargar pagaré
           </a>
 
           {canDelete ? (
@@ -194,11 +204,13 @@ export default async function LoanDetailPage({
             </div>
             {multaPorAtraso > 0 ? (
               <div className="mt-1 text-xs text-black/55">
-                Incluye multas: {moneyLabel(totalMultas)} ({totalMultasCount} atraso(s) ×{" "}
-                {moneyLabel(multaPorAtraso)})
+                Incluye multas: {moneyLabel(totalMultas)} ({totalMultasCount}{" "}
+                atraso(s) × {moneyLabel(multaPorAtraso)})
               </div>
             ) : (
-              <div className="mt-1 text-xs text-black/55">Sin multas configuradas.</div>
+              <div className="mt-1 text-xs text-black/55">
+                Sin multas configuradas.
+              </div>
             )}
           </CardBody>
         </Card>
@@ -211,7 +223,10 @@ export default async function LoanDetailPage({
           subtitle="Se aplica a los pagos más viejos primero (FIFO)."
         />
         <CardBody>
-          <form action={registerPaymentAction} className="grid gap-3 sm:grid-cols-6">
+          <form
+            action={registerPaymentAction}
+            className="grid gap-3 sm:grid-cols-6"
+          >
             <input type="hidden" name="loanId" value={loan.id} />
 
             <div className="sm:col-span-2">
@@ -255,7 +270,9 @@ export default async function LoanDetailPage({
                 className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm outline-none disabled:bg-black/5"
               />
               <div className="mt-1 text-xs text-black/50">
-                {multaPorAtraso > 0 ? `× ${moneyLabel(multaPorAtraso)}` : "Configura multa en el préstamo"}
+                {multaPorAtraso > 0
+                  ? `× ${moneyLabel(multaPorAtraso)}`
+                  : "Configura multa en el préstamo"}
               </div>
             </div>
 
@@ -293,12 +310,14 @@ export default async function LoanDetailPage({
                   <tr key={s.id} className="border-t border-black/10">
                     <td className="py-2">{s.installmentNumber}</td>
                     <td className="py-2">{fmtDate(s.dueDate)}</td>
-                    <td className="py-2">{moneyLabel(Number(s.expectedAmount))}</td>
+                    <td className="py-2">
+                      {moneyLabel(Number(s.expectedAmount))}
+                    </td>
                     <td className="py-2">{moneyLabel(Number(s.paidAmount))}</td>
                     <td className="py-2">
                       <span
                         className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClassSchedule(
-                          String(s.status)
+                          String(s.status),
                         )}`}
                       >
                         {scheduleStatusLabel(String(s.status))}
@@ -318,10 +337,15 @@ export default async function LoanDetailPage({
 
       {/* Historial de pagos */}
       <Card>
-        <CardHeader title="Pagos registrados" subtitle="Últimos movimientos del préstamo." />
+        <CardHeader
+          title="Pagos registrados"
+          subtitle="Últimos movimientos del préstamo."
+        />
         <CardBody>
           {loan.payments.length === 0 ? (
-            <div className="text-sm text-black/55">Aún no hay pagos registrados.</div>
+            <div className="text-sm text-black/55">
+              Aún no hay pagos registrados.
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -385,7 +409,7 @@ export default async function LoanDetailPage({
                 <div className="mt-1">
                   <span
                     className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badgeClassConclusion(
-                      String(snap.conclusion)
+                      String(snap.conclusion),
                     )}`}
                   >
                     {conclusionLabel(String(snap.conclusion))}
